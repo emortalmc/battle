@@ -1,4 +1,4 @@
-package dev.emortal.minestom.parkourtag;
+package dev.emortal.minestom.battle;
 
 import dev.emortal.minestom.core.MinestomServer;
 import dev.emortal.minestom.gamesdk.GameSdkModule;

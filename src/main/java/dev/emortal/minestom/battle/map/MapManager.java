@@ -1,4 +1,4 @@
-package dev.emortal.minestom.parkourtag.map;
+package dev.emortal.minestom.battle.map;
 
 import dev.emortal.tnt.TNTLoader;
 import dev.emortal.tnt.source.FileTNTSource;
@@ -22,14 +22,13 @@ import java.util.concurrent.ThreadLocalRandom;
 public class MapManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(MapManager.class);
 
-    private static final DimensionType DIMENSION_TYPE = DimensionType.builder(NamespaceID.from("emortalmc:parkourtag"))
+    private static final DimensionType DIMENSION_TYPE = DimensionType.builder(NamespaceID.from("emortalmc:battle"))
             .skylightEnabled(true)
-            .ambientLight(1.0f)
+//            .ambientLight(1.0f)
             .build();
 
     private static final List<String> ENABLED_MAPS = List.of(
-            "city",
-            "ruins"
+            "cove"
     );
     private static final Path MAPS_PATH = Path.of("maps");
 

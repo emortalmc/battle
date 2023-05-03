@@ -21,7 +21,7 @@ dependencies {
     implementation("com.github.EmortalMC:TNT:4ef1b53482")
     implementation("com.github.EmortalMC:MinestomPvP:8ce1d9f85f")
 
-    implementation("dev.emortal.minestom:core:cc4a043")
+    implementation("dev.emortal.minestom:core:eb555db")
     implementation("net.kyori:adventure-text-minimessage:4.12.0")
 
     implementation("dev.emortal.minestom:game-sdk:d028e7a")

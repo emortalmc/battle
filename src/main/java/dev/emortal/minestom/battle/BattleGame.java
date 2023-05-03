@@ -1,11 +1,17 @@
-package dev.emortal.minestom.parkourtag;
+package dev.emortal.minestom.battle;
 
 import dev.emortal.api.kurushimi.KurushimiMinestomUtils;
+import dev.emortal.minestom.battle.config.MapConfigJson;
+import dev.emortal.minestom.battle.entity.NoPhysicsEntity;
+import dev.emortal.minestom.battle.listeners.ChestListener;
 import dev.emortal.minestom.core.Environment;
 import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
-import dev.emortal.minestom.parkourtag.listeners.PVPListener;
+import dev.emortal.minestom.battle.listeners.PVPListener;
+import io.github.bloepiloepi.pvp.PvpExtension;
+import io.github.bloepiloepi.pvp.config.*;
+import io.github.bloepiloepi.pvp.legacy.LegacyKnockbackSettings;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -16,13 +22,19 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.coordinate.Vec;
+import net.minestom.server.entity.Entity;
+import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.metadata.other.AreaEffectCloudMeta;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerLoginEvent;
+import net.minestom.server.event.trait.InstanceEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
 import net.minestom.server.scoreboard.Team;
@@ -42,6 +54,8 @@ import java.util.function.Supplier;
 public class BattleGame extends Game {
     private static final Logger LOGGER = LoggerFactory.getLogger(BattleGame.class);
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
+
+    private static final Title.Times DEFAULT_TIMES = Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(500));
 
     private static final Pos SPAWN_POINT = new Pos(0.5, 65.0, 0.5);
 
@@ -64,10 +78,16 @@ public class BattleGame extends Game {
 
     private final BossBar bossBar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.PINK, BossBar.Overlay.PROGRESS);
 
+    private Set<Entity> freezeEntities = new HashSet<>();
+
     private @Nullable Task gameTimerTask;
+
+    private GameCreationInfo creationInfo;
 
     protected BattleGame(@NotNull GameCreationInfo creationInfo, @NotNull EventNode<Event> gameEventNode, @NotNull Instance instance) {
         super(creationInfo, gameEventNode);
+
+        this.creationInfo = creationInfo;
 
         instance.setTimeRate(0);
         instance.setTimeUpdate(null);
@@ -91,20 +111,16 @@ public class BattleGame extends Game {
         event.setSpawningInstance(this.instance);
         this.players.add(player);
 
-        player.setFlying(false);
-        player.setAllowFlying(false);
+        player.setFlying(true);
+        player.setAllowFlying(true);
         player.setAutoViewable(true);
         player.setTeam(ALIVE_TEAM);
         player.setGlowing(false);
-        player.setGameMode(GameMode.ADVENTURE);
+        player.setGameMode(GameMode.SPECTATOR);
         player.showBossBar(this.bossBar);
     }
 
     public void start() {
-        for (Player player : this.players) {
-            player.hideBossBar(this.bossBar);
-        }
-
         this.audience.playSound(Sound.sound(SoundEvent.BLOCK_PORTAL_TRIGGER, Sound.Source.MASTER, 0.45f, 1.27f));
 
         this.instance.scheduler().submitTask(new Supplier<>() {
@@ -134,7 +150,81 @@ public class BattleGame extends Game {
     }
 
     private void beginGame() {
-        beginTimer();
+        final int playerAmount = this.players.size();
+        final double playerStep = 2*Math.PI / playerAmount;
+
+        String mapId = creationInfo.mapId();
+        if (mapId == null || mapId.isBlank()) mapId = "cove";
+        final MapConfigJson mapConfig = BattleModule.MAP_CONFIG_MAP.get(mapId);
+
+        double circleIndex = 0.0;
+        for (Player player : this.players) {
+            PvpExtension.setLegacyAttack(player, true);
+            player.setFlying(false);
+            player.setAllowFlying(false);
+            player.setGameMode(GameMode.ADVENTURE);
+
+            // Spawn in a circle
+            double x = Math.sin(circleIndex) * mapConfig.circleRadius;
+            double z = Math.cos(circleIndex) * mapConfig.circleRadius;
+            Pos pos = mapConfig.circleCenter.add(x, 0, z).withLookAt(mapConfig.circleCenter);
+            player.teleport(pos);
+            circleIndex += playerStep;
+
+            // Freeze players by using riding entity
+            Entity freezeEntity = new NoPhysicsEntity(EntityType.AREA_EFFECT_CLOUD);
+            AreaEffectCloudMeta meta = (AreaEffectCloudMeta) freezeEntity.getEntityMeta();
+            meta.setRadius(0f);
+            freezeEntity.updateViewableRule(a -> a == player); // only show stuck entity for self
+            freezeEntity.setInstance(instance, pos).thenRun(() -> {
+                freezeEntity.addPassenger(player);
+            });
+            freezeEntities.add(freezeEntity);
+        }
+
+        this.gameTimerTask = this.instance.scheduler().submitTask(new Supplier<>() {
+            int secondsLeft = GameSdkModule.TEST_MODE ? 2 : 10;
+
+            @Override
+            public TaskSchedule get() {
+                if (secondsLeft == 0) {
+                    audience.showTitle(Title.title(
+                            Component.empty(),
+                            Component.text("Round start!"),
+                            DEFAULT_TIMES
+                    ));
+                    audience.playSound(Sound.sound(Key.key("battle.countdown.beginover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+
+                    // Unfreeze players
+                    for (Entity freezeEntity : freezeEntities) {
+                        freezeEntity.remove();
+                    }
+                    freezeEntities.clear();
+
+                    // Register events
+                    EventNode<InstanceEvent> eventNode = instance.eventNode();
+                    PVPListener.registerListener(eventNode, BattleGame.this);
+                    ChestListener.registerListener(eventNode, BattleGame.this);
+
+                    System.out.println(instance.eventNode().toString());
+
+                    checkPlayerCounts(); // Trigger bossbar to update
+
+                    beginTimer();
+                    return TaskSchedule.stop();
+                }
+
+                audience.showTitle(Title.title(
+                        Component.empty(),
+                        Component.text(secondsLeft),
+                        DEFAULT_TIMES
+                ));
+                if (secondsLeft <= 5) audience.playSound(Sound.sound(Key.key("battle.countdown.begin2"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+
+                secondsLeft--;
+                return TaskSchedule.seconds(1);
+            }
+        });
     }
 
     private void beginTimer() {
@@ -189,10 +279,12 @@ public class BattleGame extends Game {
         Set<Player> alivePlayers = getAlivePlayers();
 
         if (alivePlayers.isEmpty()) {
+            LOGGER.info("Won from empty players");
             victory(null);
             return;
         }
-        if (alivePlayers.size() == 1) {
+        if (alivePlayers.size() == 1 && !GameSdkModule.TEST_MODE) {
+            LOGGER.info("Won from ==1" + GameSdkModule.TEST_MODE);
             victory(alivePlayers.iterator().next());
             return;
         }
@@ -209,7 +301,8 @@ public class BattleGame extends Game {
     public Set<Player> getAlivePlayers() {
         Set<Player> alive = new HashSet<>();
         for (Player player : players) {
-            if (player.getGameMode() != GameMode.ADVENTURE) alive.add(player);
+            if (player.getGameMode() != GameMode.ADVENTURE) continue;
+            alive.add(player);
         }
 
         return alive;

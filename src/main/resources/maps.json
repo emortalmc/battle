@@ -1,0 +1,26 @@
+{
+  "cove": {
+    "circleRadius": 6.0,
+    "circleCenter": {
+      "x": 0.5,
+      "y": 70.0,
+      "z": 0.5
+    }
+  },
+  "caverns": {
+    "circleRadius": 13.0,
+    "circleCenter": {
+      "x": 0.5,
+      "y": 70.0,
+      "z": 0.5
+    }
+  },
+  "crucible": {
+    "circleRadius": 8.0,
+    "circleCenter": {
+      "x": 0.5,
+      "y": 70.0,
+      "z": 0.5
+    }
+  }
+}

@@ -1,6 +1,5 @@
 package dev.emortal.minestom.battle.chest;
 
-import dev.emortal.minestom.battle.listeners.ChestListener;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockHandler;
 import net.minestom.server.inventory.Inventory;
@@ -10,8 +9,11 @@ import net.minestom.server.utils.NamespaceID;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChestHandler implements BlockHandler {
+
+    public final AtomicInteger playersInside = new AtomicInteger(0);
     private final Inventory inventory = new Inventory(InventoryType.CHEST_3_ROW, "");
 //    private boolean unopenedSinceRefill = true;
 

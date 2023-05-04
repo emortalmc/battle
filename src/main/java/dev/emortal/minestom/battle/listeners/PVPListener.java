@@ -13,6 +13,7 @@ import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
+import net.minestom.server.event.entity.EntityDamageEvent;
 import net.minestom.server.event.trait.InstanceEvent;
 import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.Nullable;
@@ -28,8 +29,16 @@ public class PVPListener {
     );
 
     public static final Tag<Integer> KILLS_TAG = Tag.Integer("kills");
+    public static final Tag<Boolean> INVULNERABLE_TAG = Tag.Boolean("invulnerable");
 
     public static void registerListener(EventNode<InstanceEvent> eventNode, BattleGame game) {
+        eventNode.addListener(EntityDamageEvent.class, e -> {
+            if (!(e.getEntity() instanceof Player player)) return;
+            if (player.hasTag(INVULNERABLE_TAG)) {
+                e.setCancelled(true);
+            }
+        });
+
         eventNode.addListener(EntityPreDeathEvent.class, e -> {
             if (!(e.getEntity() instanceof Player player)) return;
 
@@ -37,14 +46,13 @@ public class PVPListener {
 
             // Get last player that hit
             DamageType lastDmg = player.getLastDamageSource();
-            if (lastDmg instanceof CustomEntityDamage cd) { // CustomEntityDamage should always be used over EntityDamage due to MinestomPvP
-                if (cd.getEntity() instanceof Player killer) {
-                    playerDied(game, player, killer);
-                }
+            if (lastDmg instanceof CustomEntityDamage cd && cd.getEntity() instanceof Player killer) { // CustomEntityDamage should always be used over EntityDamage due to MinestomPvP
+                playerDied(game, player, killer);
+            } else {
+                playerDied(game, player, null);
             }
 
             game.checkPlayerCounts();
-
         });
     }
 

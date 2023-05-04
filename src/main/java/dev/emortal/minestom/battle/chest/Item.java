@@ -40,7 +40,7 @@ public class Item {
                 builder.lore(
                         Component.text()
                                 .append(Component.text("Deals ", NamedTextColor.GRAY))
-                                .append(Component.text("\u2764".repeat(damage), NamedTextColor.RED))
+                                .append(Component.text("❤".repeat(damage), NamedTextColor.RED))
                                 .append(Component.text(" (" + damage + ")", NamedTextColor.GRAY))
                                 .build()
                                 .decoration(TextDecoration.ITALIC, false)

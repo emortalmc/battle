@@ -72,7 +72,7 @@ public class BattleModule extends Module {
 
         MinecraftServer.getGlobalEventHandler().addChild(
                 PvPConfig.legacyBuilder()
-                        .damage(DamageConfig.legacyBuilder().shield(false).sounds(true).animation(true))
+                        .damage(DamageConfig.legacyBuilder().shield(false))
                         .build().createNode()
         );
 

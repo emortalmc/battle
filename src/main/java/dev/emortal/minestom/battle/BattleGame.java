@@ -76,7 +76,7 @@ public class BattleGame extends Game {
     public final @NotNull Instance instance;
 
 
-    private final BossBar bossBar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.PINK, BossBar.Overlay.PROGRESS);
+    private final BossBar bossBar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
 
     private Set<Entity> freezeEntities = new HashSet<>();
 
@@ -117,10 +117,13 @@ public class BattleGame extends Game {
         player.setTeam(ALIVE_TEAM);
         player.setGlowing(false);
         player.setGameMode(GameMode.SPECTATOR);
-        player.showBossBar(this.bossBar);
     }
 
     public void start() {
+        for (Player player : players) {
+            player.setTag(PVPListener.INVULNERABLE_TAG, true);
+        }
+
         this.audience.playSound(Sound.sound(SoundEvent.BLOCK_PORTAL_TRIGGER, Sound.Source.MASTER, 0.45f, 1.27f));
 
         this.instance.scheduler().submitTask(new Supplier<>() {
@@ -206,7 +209,11 @@ public class BattleGame extends Game {
                     PVPListener.registerListener(eventNode, BattleGame.this);
                     ChestListener.registerListener(eventNode, BattleGame.this);
 
-                    System.out.println(instance.eventNode().toString());
+                    audience.showBossBar(bossBar);
+
+                    for (Player player : players) {
+                        player.removeTag(PVPListener.INVULNERABLE_TAG);
+                    }
 
                     checkPlayerCounts(); // Trigger bossbar to update
 
@@ -232,6 +239,7 @@ public class BattleGame extends Game {
         this.gameTimerTask = this.instance.scheduler().submitTask(new Supplier<>() {
             int secondsLeft = playTime;
             final int glowing = secondsLeft - 60;
+            final int invulnerability = playTime - 15;
 
             @Override
             public TaskSchedule get() {
@@ -267,6 +275,18 @@ public class BattleGame extends Game {
                     }
                 }
 
+                if (secondsLeft >= invulnerability && secondsLeft <= invulnerability + 15) {
+                    final int invulnerableSeconds = secondsLeft - invulnerability;
+                    audience.sendActionBar(Component.text("You are invulnerable for " + invulnerableSeconds + " seconds"));
+                    if (invulnerableSeconds <= 5) {
+                        audience.playSound(Sound.sound(Key.key("battle.countdown.begin"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+                    }
+                }
+                if (secondsLeft == invulnerability) {
+                    audience.sendActionBar(Component.text("You are no longer invulnerable"));
+                    audience.playSound(Sound.sound(Key.key("battle.countdown.invulover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+                }
+
                 bossBar.progress((float) secondsLeft / (float) playTime);
 
                 secondsLeft--;
@@ -279,12 +299,10 @@ public class BattleGame extends Game {
         Set<Player> alivePlayers = getAlivePlayers();
 
         if (alivePlayers.isEmpty()) {
-            LOGGER.info("Won from empty players");
             victory(null);
             return;
         }
         if (alivePlayers.size() == 1 && !GameSdkModule.TEST_MODE) {
-            LOGGER.info("Won from ==1" + GameSdkModule.TEST_MODE);
             victory(alivePlayers.iterator().next());
             return;
         }
@@ -330,7 +348,8 @@ public class BattleGame extends Game {
             int killsRecord = 0;
             Player highestKiller = null;
             for (Player player : players) {
-                int playerKills = player.getTag(PVPListener.KILLS_TAG);
+                Integer playerKills = player.getTag(PVPListener.KILLS_TAG);
+                if (playerKills == null) playerKills = 0;
                 if (playerKills > killsRecord) {
                     killsRecord = playerKills;
                     highestKiller = player;

@@ -3,7 +3,7 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-group = "dev.emortal.minestom.parkourtag"
+group = "dev.emortal.minestom.battle"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -40,7 +40,7 @@ tasks {
 
         manifest {
             attributes(
-                "Main-Class" to "dev.emortal.minestom.parkourtag.Entrypoint",
+                "Main-Class" to "dev.emortal.minestom.battle.Entrypoint",
                 "Multi-Release" to true
             )
         }

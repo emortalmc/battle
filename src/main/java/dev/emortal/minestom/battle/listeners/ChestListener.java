@@ -79,7 +79,7 @@ public class ChestListener {
                 playerChestMap.put(e.getPlayer().getUuid(), e.getBlockPosition());
 
                 if (playersInside == 1) {
-                    game.getAudience().playSound(Sound.sound(SoundEvent.BLOCK_CHEST_OPEN, Sound.Source.BLOCK, 1f, 1f), Sound.Emitter.self());
+                    game.getAudience().playSound(Sound.sound(SoundEvent.BLOCK_CHEST_OPEN, Sound.Source.BLOCK, 1f, 1f), e.getBlockPosition().x(), e.getBlockPosition().y(), e.getBlockPosition().z());
                 }
             }
         });
@@ -94,7 +94,7 @@ public class ChestListener {
             e.getInstance().sendGroupedPacket(new BlockActionPacket(openChestPos, (byte) 1, (byte) playersInside, Block.CHEST));
 
             if (playersInside == 0) {
-                game.getAudience().playSound(Sound.sound(SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f), Sound.Emitter.self());
+                game.getAudience().playSound(Sound.sound(SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f), openChestPos.x(), openChestPos.y(), openChestPos.z());
             }
         });
     }

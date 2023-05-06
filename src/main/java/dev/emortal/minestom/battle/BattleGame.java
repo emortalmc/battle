@@ -11,6 +11,7 @@ import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
 import io.github.bloepiloepi.pvp.PvpExtension;
+import io.github.bloepiloepi.pvp.potion.PotionListener;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -382,6 +383,8 @@ public class BattleGame extends Game {
     private void sendBackToLobby() {
         for (final Player player : players) {
             player.setTeam(null);
+            player.clearEffects();
+            PotionListener.durationLeftMap.remove(player.getUuid()); // probably works fine but im paranoid
         }
         KurushimiMinestomUtils.sendToLobby(players, this::removeGame, this::removeGame);
     }

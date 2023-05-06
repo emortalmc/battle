@@ -4,14 +4,13 @@ import dev.emortal.api.kurushimi.KurushimiMinestomUtils;
 import dev.emortal.minestom.battle.config.MapConfigJson;
 import dev.emortal.minestom.battle.entity.NoPhysicsEntity;
 import dev.emortal.minestom.battle.listeners.ChestListener;
+import dev.emortal.minestom.battle.listeners.HungerListener;
+import dev.emortal.minestom.battle.listeners.PVPListener;
 import dev.emortal.minestom.core.Environment;
 import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
-import dev.emortal.minestom.battle.listeners.PVPListener;
 import io.github.bloepiloepi.pvp.PvpExtension;
-import io.github.bloepiloepi.pvp.config.*;
-import io.github.bloepiloepi.pvp.legacy.LegacyKnockbackSettings;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
@@ -22,9 +21,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
@@ -208,6 +205,7 @@ public class BattleGame extends Game {
                     EventNode<InstanceEvent> eventNode = instance.eventNode();
                     PVPListener.registerListener(eventNode, BattleGame.this);
                     ChestListener.registerListener(eventNode, BattleGame.this);
+                    HungerListener.registerListener(eventNode, BattleGame.this);
 
                     audience.showBossBar(bossBar);
 

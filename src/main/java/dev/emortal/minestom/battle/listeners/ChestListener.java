@@ -6,23 +6,18 @@ import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
-import net.minestom.server.adventure.audience.Audiences;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.event.EventNode;
 import net.minestom.server.event.inventory.InventoryCloseEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.trait.InstanceEvent;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockHandler;
 import net.minestom.server.network.packet.server.play.BlockActionPacket;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.Scheduler;
 import net.minestom.server.timer.TaskSchedule;
-import org.antlr.v4.runtime.misc.Array2DHashSet;
 
 import java.time.Duration;
 import java.util.*;
@@ -87,6 +82,8 @@ public class ChestListener {
         eventNode.addListener(InventoryCloseEvent.class, e -> {
             Point openChestPos = playerChestMap.get(e.getPlayer().getUuid());
             if (openChestPos == null) return;
+
+            playerChestMap.remove(e.getPlayer().getUuid());
 
             ChestHandler handler = (ChestHandler) e.getInstance().getBlock(openChestPos).handler();
             final int playersInside = handler.playersInside.decrementAndGet();

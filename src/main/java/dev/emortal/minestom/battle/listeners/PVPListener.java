@@ -63,6 +63,7 @@ public class PVPListener {
         player.setGameMode(GameMode.SPECTATOR);
         player.setTeam(BattleGame.DEAD_TEAM);
         player.heal();
+        player.setFood(20);
         player.setAutoViewable(false);
         player.showTitle(YOU_DIED_TITLE);
 

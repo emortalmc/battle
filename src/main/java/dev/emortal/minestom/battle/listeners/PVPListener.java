@@ -70,7 +70,8 @@ public class PVPListener {
 
 
         if (killer != null) {
-            int lastKills = player.getTag(KILLS_TAG);
+            Integer lastKills = player.getTag(KILLS_TAG);
+            if (lastKills == null) lastKills = 0;
             player.setTag(KILLS_TAG, lastKills + 1);
 
             killer.showTitle(Title.title(

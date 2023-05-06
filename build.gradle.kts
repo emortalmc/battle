@@ -24,7 +24,7 @@ dependencies {
     implementation("dev.emortal.minestom:core:eb555db")
     implementation("net.kyori:adventure-text-minimessage:4.12.0")
 
-    implementation("dev.emortal.minestom:game-sdk:d028e7a")
+    implementation("dev.emortal.minestom:game-sdk:818e2c2")
     implementation("dev.emortal.api:kurushimi-sdk:5f9fde3") {
         exclude(group = "dev.emortal.minestom", module = "game-sdk")
     }

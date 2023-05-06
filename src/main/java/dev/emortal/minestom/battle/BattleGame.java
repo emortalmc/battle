@@ -231,7 +231,7 @@ public class BattleGame extends Game {
         final int playTime = 120 + (40 * getPlayers().size());
         this.gameTimerTask = this.instance.scheduler().submitTask(new Supplier<>() {
             int secondsLeft = playTime;
-            final int glowing = secondsLeft - 60;
+            final int glowing = (int)Math.floor(playTime * 0.3);
             final int invulnerability = playTime - 15;
 
             @Override
@@ -243,7 +243,7 @@ public class BattleGame extends Game {
                 }
 
                 if (secondsLeft <= 10) {
-                    audience.playSound(Sound.sound(Key.key("minecraft:battle.showdown.count" + (secondsLeft % 2 + 1)), Sound.Source.MASTER, 0.7f, 1f), Sound.Emitter.self());
+                    audience.playSound(Sound.sound(Key.key("minecraft:battle.showdown.count" + ((secondsLeft % 2) + 1)), Sound.Source.MASTER, 0.7f, 1f), Sound.Emitter.self());
                     audience.showTitle(
                             Title.title(
                                     Component.empty(),

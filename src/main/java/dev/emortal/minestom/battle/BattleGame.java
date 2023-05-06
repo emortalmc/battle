@@ -175,7 +175,6 @@ public class BattleGame extends Game {
             Entity freezeEntity = new NoPhysicsEntity(EntityType.AREA_EFFECT_CLOUD);
             AreaEffectCloudMeta meta = (AreaEffectCloudMeta) freezeEntity.getEntityMeta();
             meta.setRadius(0f);
-            freezeEntity.updateViewableRule(a -> a == player); // only show stuck entity for self
             freezeEntity.setInstance(instance, pos).thenRun(() -> {
                 freezeEntity.addPassenger(player);
             });
@@ -208,10 +207,6 @@ public class BattleGame extends Game {
                     HungerListener.registerListener(eventNode, BattleGame.this);
 
                     audience.showBossBar(bossBar);
-
-                    for (Player player : players) {
-                        player.removeTag(PVPListener.INVULNERABLE_TAG);
-                    }
 
                     checkPlayerCounts(); // Trigger bossbar to update
 
@@ -283,6 +278,10 @@ public class BattleGame extends Game {
                 if (secondsLeft == invulnerability) {
                     audience.sendActionBar(Component.text("You are no longer invulnerable"));
                     audience.playSound(Sound.sound(Key.key("battle.countdown.invulover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+
+                    for (Player player : players) {
+                        player.removeTag(PVPListener.INVULNERABLE_TAG);
+                    }
                 }
 
                 bossBar.progress((float) secondsLeft / (float) playTime);

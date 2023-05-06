@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     implementation("com.github.EmortalMC:TNT:4ef1b53482")
-    implementation("com.github.EmortalMC:MinestomPvP:8ce1d9f85f")
+    implementation("com.github.EmortalMC:MinestomPvP:3f4b66624e")
 
     implementation("dev.emortal.minestom:core:eb555db")
     implementation("net.kyori:adventure-text-minimessage:4.12.0")

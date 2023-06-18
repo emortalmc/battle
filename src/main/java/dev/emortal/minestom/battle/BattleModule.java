@@ -2,11 +2,11 @@ package dev.emortal.minestom.battle;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import dev.emortal.api.modules.Module;
+import dev.emortal.api.modules.ModuleData;
+import dev.emortal.api.modules.ModuleEnvironment;
 import dev.emortal.minestom.battle.config.MapConfigJson;
 import dev.emortal.minestom.battle.map.MapManager;
-import dev.emortal.minestom.core.module.Module;
-import dev.emortal.minestom.core.module.ModuleData;
-import dev.emortal.minestom.core.module.ModuleEnvironment;
 import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameSdkConfig;
 import io.github.bloepiloepi.pvp.PvpExtension;

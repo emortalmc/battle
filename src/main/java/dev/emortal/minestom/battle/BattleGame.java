@@ -76,11 +76,11 @@ public class BattleGame extends Game {
 
     private final BossBar bossBar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
 
-    private Set<Entity> freezeEntities = new HashSet<>();
+    private final Set<Entity> freezeEntities = new HashSet<>();
 
     private @Nullable Task gameTimerTask;
 
-    private GameCreationInfo creationInfo;
+    private final GameCreationInfo creationInfo;
 
     protected BattleGame(@NotNull GameCreationInfo creationInfo, @NotNull EventNode<Event> gameEventNode, @NotNull Instance instance) {
         super(creationInfo, gameEventNode);

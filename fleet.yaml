@@ -61,3 +61,8 @@ spec:
                       fieldPath: metadata.namespace
                 - name: FLEET_NAME
                   value: battle
+                - name: PYROSCOPE_SERVER_ADDRESS
+                  valueFrom:
+                    configMapKeyRef:
+                      name: pyroscope
+                      key: address

@@ -6,6 +6,7 @@ import dev.emortal.minestom.battle.entity.NoPhysicsEntity;
 import dev.emortal.minestom.battle.listeners.ChestListener;
 import dev.emortal.minestom.battle.listeners.HungerListener;
 import dev.emortal.minestom.battle.listeners.PVPListener;
+import dev.emortal.minestom.battle.map.MapManager;
 import dev.emortal.minestom.core.Environment;
 import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
@@ -105,16 +106,20 @@ public class BattleGame extends Game {
             return;
         }
 
-        player.setRespawnPoint(SPAWN_POINT);
+        String mapId = creationInfo.mapId();
+        if (mapId == null || mapId.isBlank()) mapId = instance.getTag(MapManager.MAP_ID_TAG);
+        final MapConfigJson mapConfig = BattleModule.MAP_CONFIG_MAP.get(mapId);
+
+        player.setRespawnPoint(mapConfig.circleCenter.add(0, 0, -mapConfig.circleRadius));
         event.setSpawningInstance(this.instance);
         this.players.add(player);
 
-        player.setFlying(true);
-        player.setAllowFlying(true);
+//        player.setFlying(false);
+//        player.setAllowFlying(true);
         player.setAutoViewable(true);
         player.setTeam(ALIVE_TEAM);
         player.setGlowing(false);
-        player.setGameMode(GameMode.SPECTATOR);
+//        player.setGameMode(GameMode.SPECTATOR);
     }
 
     public void start() {
@@ -155,7 +160,7 @@ public class BattleGame extends Game {
         final double playerStep = 2*Math.PI / playerAmount;
 
         String mapId = creationInfo.mapId();
-        if (mapId == null || mapId.isBlank()) mapId = "cove";
+        if (mapId == null || mapId.isBlank()) mapId = instance.getTag(MapManager.MAP_ID_TAG);
         final MapConfigJson mapConfig = BattleModule.MAP_CONFIG_MAP.get(mapId);
 
         double circleIndex = 0.0;

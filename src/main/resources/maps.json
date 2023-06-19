@@ -11,7 +11,7 @@
     "circleRadius": 13.0,
     "circleCenter": {
       "x": 0.5,
-      "y": 70.0,
+      "y": 62.0,
       "z": 0.5
     }
   },
@@ -19,7 +19,7 @@
     "circleRadius": 8.0,
     "circleCenter": {
       "x": 0.5,
-      "y": 70.0,
+      "y": 66.0,
       "z": 0.5
     }
   }

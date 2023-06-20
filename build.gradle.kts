@@ -20,7 +20,7 @@ repositories {
 dependencies {
     implementation("dev.hollowcube:polar:1.2.0")
 //    implementation("com.github.EmortalMC:TNT:4ef1b53482")
-    implementation("com.github.EmortalMC:MinestomPvP:3f4b66624e")
+    implementation("com.github.EmortalMC:MinestomPvP:6aefcba403")
 
     implementation("dev.emortal.minestom:core:85ae46e")
     implementation("net.kyori:adventure-text-minimessage:4.12.0")

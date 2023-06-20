@@ -10,8 +10,6 @@ import dev.emortal.minestom.battle.map.MapManager;
 import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameSdkConfig;
 import io.github.bloepiloepi.pvp.PvpExtension;
-import io.github.bloepiloepi.pvp.config.DamageConfig;
-import io.github.bloepiloepi.pvp.config.PvPConfig;
 import net.minestom.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -59,12 +57,6 @@ public class BattleModule extends Module {
             // Fix all permissions not working due to MinestomPVP's custom player provider
             MinecraftServer.getConnectionManager().setPlayerProvider(AllPermissionCustomPlayer::new);
         }
-
-        MinecraftServer.getGlobalEventHandler().addChild(
-                PvPConfig.legacyBuilder()
-                        .damage(DamageConfig.legacyBuilder().shield(false))
-                        .build().createNode()
-        );
 
         return true;
     }

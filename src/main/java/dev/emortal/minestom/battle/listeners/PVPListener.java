@@ -1,22 +1,35 @@
 package dev.emortal.minestom.battle.listeners;
 
 import dev.emortal.minestom.battle.BattleGame;
+import io.github.bloepiloepi.pvp.damage.CustomDamageType;
 import io.github.bloepiloepi.pvp.damage.CustomEntityDamage;
+import io.github.bloepiloepi.pvp.entity.EntityUtils;
 import io.github.bloepiloepi.pvp.events.EntityPreDeathEvent;
+import io.github.bloepiloepi.pvp.events.FinalDamageEvent;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
+import net.minestom.server.coordinate.Point;
+import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.EventNode;
-import net.minestom.server.event.entity.EntityDamageEvent;
+import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.event.trait.InstanceEvent;
+import net.minestom.server.instance.block.Block;
+import net.minestom.server.network.packet.server.play.HitAnimationPacket;
+import net.minestom.server.potion.PotionEffect;
+import net.minestom.server.potion.TimedPotion;
 import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.Nullable;
+
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
 
 import static net.kyori.adventure.title.Title.DEFAULT_TIMES;
 
@@ -32,10 +45,18 @@ public class PVPListener {
     public static final Tag<Boolean> INVULNERABLE_TAG = Tag.Boolean("invulnerable");
 
     public static void registerListener(EventNode<InstanceEvent> eventNode, BattleGame game) {
-        eventNode.addListener(EntityDamageEvent.class, e -> {
+        eventNode.addListener(FinalDamageEvent.class, e -> {
+            if (e.isCancelled()) return;
             if (!(e.getEntity() instanceof Player player)) return;
             if (player.hasTag(INVULNERABLE_TAG)) {
                 e.setCancelled(true);
+                return;
+            }
+
+            if (e.getDamageType().getEntity() != null) {
+                game.instance.sendGroupedPacket(new HitAnimationPacket(e.getEntity().getEntityId(), e.getDamageType().getEntity().getPosition().yaw() + 90));
+            } else {
+                game.instance.sendGroupedPacket(new HitAnimationPacket(e.getEntity().getEntityId(), -1));
             }
         });
 
@@ -53,6 +74,67 @@ public class PVPListener {
             }
 
             game.checkPlayerCounts();
+        });
+
+        eventNode.addListener(PlayerTickEvent.class, e -> {
+            if (e.getPlayer().hasTag(INVULNERABLE_TAG)) {
+                return;
+            }
+
+//            if (borderActive && player.gameMode == GameMode.ADVENTURE) {
+//                val point = player.position
+//                val radius: Double = (e.instance.worldBorder.diameter / 2.0) + 1.5
+//                val checkX = point.x() <= e.instance.worldBorder.centerX + radius && point.x() >= e.instance.worldBorder.centerX - radius
+//                val checkZ = point.z() <= e.instance.worldBorder.centerZ + radius && point.z() >= e.instance.worldBorder.centerZ - radius
+//
+//                if (!checkX || !checkZ) {
+//                    kill(player)
+//                }
+//            }
+
+            Set<Point> blocksInHitbox = getPointsBetween(
+                    e.getPlayer().getBoundingBox().relativeStart().add(e.getPlayer().getPosition()),
+                    e.getPlayer().getBoundingBox().relativeEnd().add(e.getPlayer().getPosition())
+            );
+
+            for (Point pos : blocksInHitbox) {
+                Block block = e.getInstance().getBlock(pos, Block.Getter.Condition.TYPE);
+
+                // TODO: Could probably be cleaner
+                if (block.compare(Block.WATER)) {
+                    e.getPlayer().setOnFire(false);
+                } else if (block.compare(Block.FIRE)) {
+                    EntityUtils.setFireForDuration(e.getPlayer(), Duration.ofSeconds(6));
+
+                    if (e.getPlayer().getAliveTicks() % 10L == 0L) {
+                        boolean hasFireResistance = false;
+                        for (TimedPotion activeEffect : e.getPlayer().getActiveEffects()) {
+                            if (activeEffect.getPotion().effect() == PotionEffect.FIRE_RESISTANCE) {
+                                hasFireResistance = true;
+                                break;
+                            }
+                        }
+
+                        if (hasFireResistance) return;
+                        e.getPlayer().damage(CustomDamageType.IN_FIRE, 1.0f);
+                    }
+                } else if (block.compare(Block.LAVA)) {
+                    EntityUtils.setFireForDuration(e.getPlayer(), Duration.ofSeconds(12));
+
+                    if (e.getPlayer().getAliveTicks() % 10L == 0L) {
+                        boolean hasFireResistance = false;
+                        for (TimedPotion activeEffect : e.getPlayer().getActiveEffects()) {
+                            if (activeEffect.getPotion().effect() == PotionEffect.FIRE_RESISTANCE) {
+                                hasFireResistance = true;
+                                break;
+                            }
+                        }
+
+                        if (hasFireResistance) return;
+                        e.getPlayer().damage(CustomDamageType.LAVA, 4.0f);
+                    }
+                }
+            }
         });
     }
 
@@ -77,9 +159,9 @@ public class PVPListener {
             killer.showTitle(Title.title(
                     Component.empty(),
                     Component.text()
-                            .append(Component.text(player.getUsername(), NamedTextColor.RED))
+                            .append(Component.text("☠ " + player.getUsername(), NamedTextColor.RED))
                             .build(),
-                    DEFAULT_TIMES
+                    Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1))
             ));
 
             game.getAudience().sendMessage(
@@ -100,6 +182,28 @@ public class PVPListener {
             );
         }
 
+    }
+
+
+    private static Set<Point> getPointsBetween(Point a, Point b) {
+        Set<Point> points = new HashSet<>();
+
+        int minX = Math.min(a.blockX(), b.blockX());
+        int maxX = Math.max(a.blockX(), b.blockX());
+        int minY = Math.min(a.blockY(), b.blockY());
+        int maxY = Math.max(a.blockY(), b.blockY());
+        int minZ = Math.min(a.blockZ(), b.blockZ());
+        int maxZ = Math.max(a.blockZ(), b.blockZ());
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    points.add(new Vec(x, y, z));
+                }
+            }
+        }
+
+        return points;
     }
 
 }

@@ -12,6 +12,8 @@ import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
 import io.github.bloepiloepi.pvp.PvpExtension;
+import io.github.bloepiloepi.pvp.config.DamageConfig;
+import io.github.bloepiloepi.pvp.config.PvPConfig;
 import io.github.bloepiloepi.pvp.potion.PotionListener;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.key.Key;
@@ -119,6 +121,7 @@ public class BattleGame extends Game {
         player.setAutoViewable(true);
         player.setTeam(ALIVE_TEAM);
         player.setGlowing(false);
+        player.setTag(PVPListener.INVULNERABLE_TAG, true);
 //        player.setGameMode(GameMode.SPECTATOR);
     }
 
@@ -156,6 +159,12 @@ public class BattleGame extends Game {
     }
 
     private void beginGame() {
+        instance.eventNode().addChild(
+                PvPConfig.legacyBuilder()
+                        .damage(DamageConfig.legacyBuilder().shield(false))
+                        .build().createNode()
+        );
+
         final int playerAmount = this.players.size();
         final double playerStep = 2*Math.PI / playerAmount;
 

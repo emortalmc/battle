@@ -121,52 +121,18 @@ public class BattleGame extends Game {
         player.setAutoViewable(true);
         player.setTeam(ALIVE_TEAM);
         player.setGlowing(false);
-        player.setTag(PVPListener.INVULNERABLE_TAG, true);
+        player.setInvulnerable(true);
 //        player.setGameMode(GameMode.SPECTATOR);
     }
 
     public void start() {
-        for (Player player : players) {
-            player.setTag(PVPListener.INVULNERABLE_TAG, true);
-        }
-
-        this.audience.playSound(Sound.sound(SoundEvent.BLOCK_PORTAL_TRIGGER, Sound.Source.MASTER, 0.45f, 1.27f));
-
-        this.instance.scheduler().submitTask(new Supplier<>() {
-            int i = 3;
-
-            @Override
-            public TaskSchedule get() {
-                if (i == 0) {
-                    beginGame();
-                    return TaskSchedule.stop();
-                }
-
-                audience.playSound(Sound.sound(Key.key("battle.countdown.begin"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
-
-                audience.showTitle(
-                        Title.title(
-                                Component.empty(),
-                                Component.text(i, NamedTextColor.LIGHT_PURPLE),
-                                Title.Times.times(Duration.ZERO, Duration.ofMillis(1500), Duration.ofMillis(500))
-                        )
-                );
-
-                i--;
-                return TaskSchedule.seconds(1);
-            }
-        });
-    }
-
-    private void beginGame() {
         instance.eventNode().addChild(
                 PvPConfig.legacyBuilder()
                         .damage(DamageConfig.legacyBuilder().shield(false))
                         .build().createNode()
         );
 
-        final int playerAmount = this.players.size();
-        final double playerStep = 2*Math.PI / playerAmount;
+        final double playerStep = 2 * Math.PI / 8;
 
         String mapId = creationInfo.mapId();
         if (mapId == null || mapId.isBlank()) mapId = instance.getTag(MapManager.MAP_ID_TAG);
@@ -178,6 +144,7 @@ public class BattleGame extends Game {
             player.setFlying(false);
             player.setAllowFlying(false);
             player.setGameMode(GameMode.ADVENTURE);
+            player.setInvulnerable(true);
 
             // Spawn in a circle
             double x = Math.sin(circleIndex) * mapConfig.circleRadius;
@@ -295,7 +262,7 @@ public class BattleGame extends Game {
                     audience.playSound(Sound.sound(Key.key("battle.countdown.invulover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
 
                     for (Player player : players) {
-                        player.removeTag(PVPListener.INVULNERABLE_TAG);
+                        player.setInvulnerable(false);
                     }
                 }
 
@@ -372,6 +339,7 @@ public class BattleGame extends Game {
         }
 
         for (Player player : players) {
+            player.setInvulnerable(true);
             player.hideBossBar(bossBar);
 
             if (winner == player) {

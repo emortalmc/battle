@@ -42,19 +42,19 @@ public class PVPListener {
     );
 
     public static final Tag<Integer> KILLS_TAG = Tag.Integer("kills");
-    public static final Tag<Boolean> INVULNERABLE_TAG = Tag.Boolean("invulnerable");
+//    public static final Tag<Boolean> INVULNERABLE_TAG = Tag.Boolean("invulnerable");
 
     public static void registerListener(EventNode<InstanceEvent> eventNode, BattleGame game) {
         eventNode.addListener(FinalDamageEvent.class, e -> {
             if (e.isCancelled()) return;
             if (!(e.getEntity() instanceof Player player)) return;
-            if (player.hasTag(INVULNERABLE_TAG)) {
+            if (player.isInvulnerable()) {
                 e.setCancelled(true);
                 return;
             }
 
             if (e.getDamageType().getEntity() != null) {
-                game.instance.sendGroupedPacket(new HitAnimationPacket(e.getEntity().getEntityId(), e.getDamageType().getEntity().getPosition().yaw() + 90));
+                game.instance.sendGroupedPacket(new HitAnimationPacket(e.getEntity().getEntityId(), e.getDamageType().getEntity().getPosition().yaw()));
             } else {
                 game.instance.sendGroupedPacket(new HitAnimationPacket(e.getEntity().getEntityId(), -1));
             }
@@ -77,7 +77,7 @@ public class PVPListener {
         });
 
         eventNode.addListener(PlayerTickEvent.class, e -> {
-            if (e.getPlayer().hasTag(INVULNERABLE_TAG)) {
+            if (e.getPlayer().isInvulnerable()) {
                 return;
             }
 

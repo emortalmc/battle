@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.hollowcube:polar:1.2.0")
+    implementation("dev.hollowcube:polar:1.3.1")
 //    implementation("com.github.EmortalMC:TNT:4ef1b53482")
     implementation("com.github.EmortalMC:MinestomPvP:6aefcba403")
 

@@ -23,7 +23,7 @@ dependencies {
     implementation("com.github.EmortalMC:MinestomPvP:6aefcba403")
 
     implementation("dev.emortal.minestom:core:85ae46e")
-    implementation("net.kyori:adventure-text-minimessage:4.12.0")
+    implementation("net.kyori:adventure-text-minimessage:4.14.0")
 
     implementation("dev.emortal.minestom:game-sdk:4d22719")
 //    implementation("dev.emortal.api:kurushimi-sdk:5f9fde3") {

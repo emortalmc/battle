@@ -63,6 +63,7 @@ public class ChestListener {
                         writer.writeFloat(0f);
                         writer.writeFloat(0.75f);
                     });
+                    game.sendGroupedPacket(packet);
                 }
             }
         });

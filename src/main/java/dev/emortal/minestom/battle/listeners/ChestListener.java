@@ -15,6 +15,9 @@ import net.minestom.server.event.trait.InstanceEvent;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.instance.block.BlockHandler;
 import net.minestom.server.network.packet.server.play.BlockActionPacket;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
+import net.minestom.server.particle.ParticleCreator;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.Scheduler;
 import net.minestom.server.timer.TaskSchedule;
@@ -42,13 +45,25 @@ public class ChestListener {
             unopenedChests.clear();
             unopenedChests.addAll(chests);
 
-            doChestAnimation(game.getAudience(), game.instance.scheduler());
+            doChestAnimation(game, game.instance.scheduler());
         }).delay(CHEST_REFILL_INTERVAL).repeat(CHEST_REFILL_INTERVAL).schedule();
 //        }).delay(TaskSchedule.seconds(5)).repeat(CHEST_REFILL_INTERVAL).schedule();
 
-        game.instance.scheduler().buildTask(() -> {
-            for (Point chest : unopenedChests) {
+        game.instance.scheduler().buildTask(new Runnable() {
+            double i = 0.0;
 
+            @Override
+            public void run() {
+                if (i > 2 * Math.PI) i = i % 2 * Math.PI;
+
+                for (Point unopenedChest : unopenedChests) {
+                    ParticlePacket packet = ParticleCreator.createParticlePacket(Particle.DUST, true, unopenedChest.x(), unopenedChest.y(), unopenedChest.z(), 0f, 0f, 0f, 0f, 1, writer -> {
+                        writer.writeFloat(1f);
+                        writer.writeFloat(1f);
+                        writer.writeFloat(0f);
+                        writer.writeFloat(0.75f);
+                    });
+                }
             }
         });
 
@@ -74,7 +89,7 @@ public class ChestListener {
                 playerChestMap.put(e.getPlayer().getUuid(), e.getBlockPosition());
 
                 if (playersInside == 1) {
-                    game.getAudience().playSound(Sound.sound(SoundEvent.BLOCK_CHEST_OPEN, Sound.Source.BLOCK, 1f, 1f), e.getBlockPosition().x(), e.getBlockPosition().y(), e.getBlockPosition().z());
+                    game.playSound(Sound.sound(SoundEvent.BLOCK_CHEST_OPEN, Sound.Source.BLOCK, 1f, 1f), e.getBlockPosition().x(), e.getBlockPosition().y(), e.getBlockPosition().z());
                 }
             }
         });
@@ -91,7 +106,7 @@ public class ChestListener {
             e.getInstance().sendGroupedPacket(new BlockActionPacket(openChestPos, (byte) 1, (byte) playersInside, Block.CHEST));
 
             if (playersInside == 0) {
-                game.getAudience().playSound(Sound.sound(SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f), openChestPos.x(), openChestPos.y(), openChestPos.z());
+                game.playSound(Sound.sound(SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f), openChestPos.x(), openChestPos.y(), openChestPos.z());
             }
         });
     }
@@ -142,8 +157,6 @@ public class ChestListener {
 
                     return TaskSchedule.stop();
                 }
-
-
 
                 audience.showTitle(
                         Title.title(

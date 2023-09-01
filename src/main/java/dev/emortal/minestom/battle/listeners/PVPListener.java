@@ -139,7 +139,7 @@ public class PVPListener {
     }
 
     public static void playerDied(BattleGame game, Player player, @Nullable Player killer) {
-        game.getAudience().playSound(Sound.sound(Key.key("battle.death"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+        game.playSound(Sound.sound(Key.key("battle.death"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
 
 
         player.setGameMode(GameMode.SPECTATOR);
@@ -164,7 +164,7 @@ public class PVPListener {
                     Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1))
             ));
 
-            game.getAudience().sendMessage(
+            game.sendMessage(
                     Component.text()
                             .append(Component.text("☠", NamedTextColor.RED))
                             .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
@@ -173,7 +173,7 @@ public class PVPListener {
                             .append(Component.text(killer.getUsername(), NamedTextColor.WHITE))
             );
         } else {
-            game.getAudience().sendMessage(
+            game.sendMessage(
                     Component.text()
                             .append(Component.text("☠", NamedTextColor.RED))
                             .append(Component.text(" | ", NamedTextColor.DARK_GRAY))

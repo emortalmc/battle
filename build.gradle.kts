@@ -22,13 +22,19 @@ dependencies {
 //    implementation("com.github.EmortalMC:TNT:4ef1b53482")
     implementation("com.github.EmortalMC:MinestomPvP:6aefcba403")
 
-    implementation("dev.emortal.minestom:core:85ae46e")
-    implementation("net.kyori:adventure-text-minimessage:4.12.0")
+    implementation("dev.emortal.minestom:core:9c52249")
+    implementation("net.kyori:adventure-text-minimessage:4.14.0")
 
-    implementation("dev.emortal.minestom:game-sdk:4d22719")
+    implementation("dev.emortal.minestom:game-sdk:f6d9300")
 //    implementation("dev.emortal.api:kurushimi-sdk:5f9fde3") {
 //        exclude(group = "dev.emortal.minestom", module = "game-sdk")
 //    }
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(20))
+    }
 }
 
 tasks.withType<JavaCompile> {

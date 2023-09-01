@@ -1,6 +1,5 @@
 package dev.emortal.minestom.battle;
 
-import dev.emortal.api.kurushimi.KurushimiMinestomUtils;
 import dev.emortal.minestom.battle.config.MapConfigJson;
 import dev.emortal.minestom.battle.entity.NoPhysicsEntity;
 import dev.emortal.minestom.battle.listeners.ChestListener;
@@ -8,7 +7,7 @@ import dev.emortal.minestom.battle.listeners.HungerListener;
 import dev.emortal.minestom.battle.listeners.PVPListener;
 import dev.emortal.minestom.battle.map.MapManager;
 import dev.emortal.minestom.core.Environment;
-import dev.emortal.minestom.gamesdk.GameSdkModule;
+import dev.emortal.minestom.gamesdk.MinestomGameServer;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
 import io.github.bloepiloepi.pvp.PvpExtension;
@@ -31,10 +30,7 @@ import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.metadata.other.AreaEffectCloudMeta;
-import net.minestom.server.event.Event;
 import net.minestom.server.event.EventNode;
-import net.minestom.server.event.player.PlayerDisconnectEvent;
-import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.trait.InstanceEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.network.packet.server.play.TeamsPacket;
@@ -74,19 +70,16 @@ public class BattleGame extends Game {
 
     public static final int MIN_PLAYERS = 2;
 
-    public final @NotNull Instance instance;
-
-
+    private boolean started = false;
     private final BossBar bossBar = BossBar.bossBar(Component.empty(), 0f, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
-
     private final Set<Entity> freezeEntities = new HashSet<>();
-
     private @Nullable Task gameTimerTask;
 
+    public final @NotNull Instance instance;
     private final GameCreationInfo creationInfo;
 
-    protected BattleGame(@NotNull GameCreationInfo creationInfo, @NotNull EventNode<Event> gameEventNode, @NotNull Instance instance) {
-        super(creationInfo, gameEventNode);
+    protected BattleGame(@NotNull GameCreationInfo creationInfo, @NotNull Instance instance) {
+        super(creationInfo);
 
         this.creationInfo = creationInfo;
 
@@ -94,15 +87,11 @@ public class BattleGame extends Game {
         instance.setTimeUpdate(null);
         this.instance = instance;
 
-        gameEventNode.addListener(PlayerDisconnectEvent.class, event -> {
-            if (this.players.remove(event.getPlayer())) this.checkPlayerCounts();
-        });
     }
 
     @Override
-    public void onPlayerLogin(@NotNull PlayerLoginEvent event) {
-        Player player = event.getPlayer();
-        if (!getGameCreationInfo().playerIds().contains(player.getUuid())) {
+    public void onJoin(Player player) {
+        if (!getCreationInfo().playerIds().contains(player.getUuid())) {
             player.kick("Unexpected join (" + Environment.getHostname() + ")");
             LOGGER.info("Unexpected join for player {}", player.getUuid());
             return;
@@ -110,10 +99,9 @@ public class BattleGame extends Game {
 
         String mapId = creationInfo.mapId();
         if (mapId == null || mapId.isBlank()) mapId = instance.getTag(MapManager.MAP_ID_TAG);
-        final MapConfigJson mapConfig = BattleModule.MAP_CONFIG_MAP.get(mapId);
+        final MapConfigJson mapConfig = Main.MAP_CONFIG_MAP.get(mapId);
 
         player.setRespawnPoint(mapConfig.circleCenter.add(0, 0, -mapConfig.circleRadius));
-        event.setSpawningInstance(this.instance);
         this.players.add(player);
 
 //        player.setFlying(false);
@@ -125,7 +113,19 @@ public class BattleGame extends Game {
 //        player.setGameMode(GameMode.SPECTATOR);
     }
 
+    @Override
+    public void onLeave(@NotNull Player player) {
+        this.checkPlayerCounts();
+    }
+
+    @Override
+    public @NotNull Instance getSpawningInstance() {
+        return this.instance;
+    }
+
     public void start() {
+        started = true;
+
         instance.eventNode().addChild(
                 PvPConfig.legacyBuilder()
                         .damage(DamageConfig.legacyBuilder().shield(false))
@@ -136,7 +136,7 @@ public class BattleGame extends Game {
 
         String mapId = creationInfo.mapId();
         if (mapId == null || mapId.isBlank()) mapId = instance.getTag(MapManager.MAP_ID_TAG);
-        final MapConfigJson mapConfig = BattleModule.MAP_CONFIG_MAP.get(mapId);
+        final MapConfigJson mapConfig = Main.MAP_CONFIG_MAP.get(mapId);
 
         double circleIndex = 0.0;
         for (Player player : this.players) {
@@ -164,17 +164,17 @@ public class BattleGame extends Game {
         }
 
         this.gameTimerTask = this.instance.scheduler().submitTask(new Supplier<>() {
-            int secondsLeft = GameSdkModule.TEST_MODE ? 2 : 10;
+            int secondsLeft = MinestomGameServer.TEST_MODE ? 2 : 10;
 
             @Override
             public TaskSchedule get() {
                 if (secondsLeft == 0) {
-                    audience.showTitle(Title.title(
+                    showTitle(Title.title(
                             Component.empty(),
                             Component.text("Round start!"),
                             DEFAULT_TIMES
                     ));
-                    audience.playSound(Sound.sound(Key.key("battle.countdown.beginover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+                    playSound(Sound.sound(Key.key("battle.countdown.beginover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
 
                     // Unfreeze players
                     for (Entity freezeEntity : freezeEntities) {
@@ -188,7 +188,7 @@ public class BattleGame extends Game {
                     ChestListener.registerListener(eventNode, BattleGame.this);
                     HungerListener.registerListener(eventNode, BattleGame.this);
 
-                    audience.showBossBar(bossBar);
+                    showBossBar(bossBar);
 
                     checkPlayerCounts(); // Trigger bossbar to update
 
@@ -196,12 +196,12 @@ public class BattleGame extends Game {
                     return TaskSchedule.stop();
                 }
 
-                audience.showTitle(Title.title(
+                showTitle(Title.title(
                         Component.empty(),
                         Component.text(secondsLeft),
                         DEFAULT_TIMES
                 ));
-                if (secondsLeft <= 5) audience.playSound(Sound.sound(Key.key("battle.countdown.begin2"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+                if (secondsLeft <= 5) playSound(Sound.sound(Key.key("battle.countdown.begin2"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
 
                 secondsLeft--;
                 return TaskSchedule.seconds(1);
@@ -225,8 +225,8 @@ public class BattleGame extends Game {
                 }
 
                 if (secondsLeft <= 10) {
-                    audience.playSound(Sound.sound(Key.key("minecraft:battle.showdown.count" + ((secondsLeft % 2) + 1)), Sound.Source.MASTER, 0.7f, 1f), Sound.Emitter.self());
-                    audience.showTitle(
+                    playSound(Sound.sound(Key.key("minecraft:battle.showdown.count" + ((secondsLeft % 2) + 1)), Sound.Source.MASTER, 0.7f, 1f), Sound.Emitter.self());
+                    showTitle(
                             Title.title(
                                     Component.empty(),
                                     Component.text(secondsLeft, TextColor.lerp(secondsLeft / 10f, NamedTextColor.RED, NamedTextColor.GREEN)),
@@ -236,8 +236,8 @@ public class BattleGame extends Game {
                 }
 
                 if (secondsLeft == glowing) {
-                    audience.playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_HAT, Sound.Source.MASTER, 1f, 1.5f), Sound.Emitter.self());
-                    audience.showTitle(
+                    playSound(Sound.sound(SoundEvent.BLOCK_NOTE_BLOCK_HAT, Sound.Source.MASTER, 1f, 1.5f), Sound.Emitter.self());
+                    showTitle(
                             Title.title(
                                     Component.empty(),
                                     Component.text("Everyone is now glowing!", NamedTextColor.GRAY),
@@ -252,14 +252,14 @@ public class BattleGame extends Game {
 
                 if (secondsLeft >= invulnerability && secondsLeft <= invulnerability + 15) {
                     final int invulnerableSeconds = secondsLeft - invulnerability;
-                    audience.sendActionBar(Component.text("You are invulnerable for " + invulnerableSeconds + " seconds"));
+                    sendActionBar(Component.text("You are invulnerable for " + invulnerableSeconds + " seconds"));
                     if (invulnerableSeconds <= 5) {
-                        audience.playSound(Sound.sound(Key.key("battle.countdown.begin"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+                        playSound(Sound.sound(Key.key("battle.countdown.begin"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
                     }
                 }
                 if (secondsLeft == invulnerability) {
-                    audience.sendActionBar(Component.text("You are no longer invulnerable"));
-                    audience.playSound(Sound.sound(Key.key("battle.countdown.invulover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+                    sendActionBar(Component.text("You are no longer invulnerable"));
+                    playSound(Sound.sound(Key.key("battle.countdown.invulover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
 
                     for (Player player : players) {
                         player.setInvulnerable(false);
@@ -278,11 +278,16 @@ public class BattleGame extends Game {
         Set<Player> alivePlayers = getAlivePlayers();
 
         if (alivePlayers.isEmpty()) {
-            victory(null);
+            sendBackToLobby();
             return;
         }
-        if (alivePlayers.size() == 1 && !GameSdkModule.TEST_MODE) {
-            victory(alivePlayers.iterator().next());
+        if (alivePlayers.size() == 1 && !MinestomGameServer.TEST_MODE) {
+            if (started) {
+                victory(alivePlayers.iterator().next());
+            } else {
+                sendBackToLobby();
+            }
+
             return;
         }
 
@@ -356,32 +361,23 @@ public class BattleGame extends Game {
                 .schedule();
     }
 
-    @Override
-    public void cancel() {
-        LOGGER.warn("Game cancelled");
-        sendBackToLobby();
-    }
-
     private void sendBackToLobby() {
         for (final Player player : players) {
             player.setTeam(null);
             player.clearEffects();
             PotionListener.durationLeftMap.remove(player.getUuid()); // probably works fine but im paranoid
         }
-        KurushimiMinestomUtils.sendToLobby(players, this::removeGame, this::removeGame);
+        finish();
     }
 
-    private void removeGame() {
-        GameSdkModule.getGameManager().removeGame(this);
-        cleanUp();
-    }
-
-    private void cleanUp() {
+    @Override
+    public void cleanUp() {
         for (final Player player : this.players) {
             player.kick(Component.text("The game ended but we weren't able to connect you to a lobby. Please reconnect", NamedTextColor.RED));
         }
-        MinecraftServer.getInstanceManager().unregisterInstance(this.instance);
+        this.instance.scheduleNextTick((a) -> {
+            MinecraftServer.getInstanceManager().unregisterInstance(this.instance);
+        });
         MinecraftServer.getBossBarManager().destroyBossBar(this.bossBar);
-        if (this.gameTimerTask != null) this.gameTimerTask.cancel();
     }
 }

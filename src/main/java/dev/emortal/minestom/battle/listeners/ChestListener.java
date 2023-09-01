@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 
 public class ChestListener {
 
-    private static TaskSchedule CHEST_REFILL_INTERVAL = TaskSchedule.seconds(80);
+    private static final TaskSchedule CHEST_REFILL_INTERVAL = TaskSchedule.seconds(80);
 
     public static void registerListener(EventNode<InstanceEvent> eventNode, BattleGame game) {
         Set<Point> chests = new HashSet<>();

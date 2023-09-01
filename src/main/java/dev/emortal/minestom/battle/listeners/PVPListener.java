@@ -13,7 +13,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.coordinate.Point;
-import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.damage.DamageType;
@@ -28,8 +27,7 @@ import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Iterator;
 
 import static net.kyori.adventure.title.Title.DEFAULT_TIMES;
 
@@ -92,13 +90,11 @@ public class PVPListener {
 //                }
 //            }
 
-            Set<Point> blocksInHitbox = getPointsBetween(
-                    e.getPlayer().getBoundingBox().relativeStart().add(e.getPlayer().getPosition()),
-                    e.getPlayer().getBoundingBox().relativeEnd().add(e.getPlayer().getPosition())
-            );
 
-            for (Point pos : blocksInHitbox) {
-                Block block = e.getInstance().getBlock(pos, Block.Getter.Condition.TYPE);
+            Iterator<Point> blocksInHitbox = e.getPlayer().getBoundingBox().getBlocks(e.getPlayer().getPosition());
+
+            while (blocksInHitbox.hasNext()) {
+                Block block = e.getInstance().getBlock(blocksInHitbox.next(), Block.Getter.Condition.TYPE);
 
                 // TODO: Could probably be cleaner
                 if (block.compare(Block.WATER)) {
@@ -182,28 +178,6 @@ public class PVPListener {
             );
         }
 
-    }
-
-
-    private static Set<Point> getPointsBetween(Point a, Point b) {
-        Set<Point> points = new HashSet<>();
-
-        int minX = Math.min(a.blockX(), b.blockX());
-        int maxX = Math.max(a.blockX(), b.blockX());
-        int minY = Math.min(a.blockY(), b.blockY());
-        int maxY = Math.max(a.blockY(), b.blockY());
-        int minZ = Math.min(a.blockZ(), b.blockZ());
-        int maxZ = Math.max(a.blockZ(), b.blockZ());
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    points.add(new Vec(x, y, z));
-                }
-            }
-        }
-
-        return points;
     }
 
 }

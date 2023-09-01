@@ -47,7 +47,7 @@ tasks {
 
         manifest {
             attributes(
-                "Main-Class" to "dev.emortal.minestom.battle.Entrypoint",
+                "Main-Class" to "dev.emortal.minestom.battle.Main",
                 "Multi-Release" to true
             )
         }

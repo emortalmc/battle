@@ -10,4 +10,4 @@ RUN apt-get install wget \
 COPY build/libs/*-all.jar /app/battle.jar
 COPY run/maps/*.polar /app/maps/
 
-CMD ["java", "-jar", "/app/battle.jar"]
+CMD ["java", "--enable-preview", "-jar", "/app/battle.jar"]

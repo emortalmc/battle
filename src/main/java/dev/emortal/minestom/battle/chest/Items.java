@@ -1,5 +1,8 @@
 package dev.emortal.minestom.battle.chest;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.item.Enchantment;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
@@ -10,19 +13,20 @@ import net.minestom.server.potion.PotionType;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 public class Items {
 
-    private static int common = 40;
-    private static int lesscommon = 35;
-    private static int uncommon = 30;
-    private static int rare = 24;
-    private static int veryrare = 14;
-    private static int epic = 7;
-    private static int legendary = 1;
+    private static final int common = 40;
+    private static final int lesscommon = 35;
+    private static final int uncommon = 30;
+    private static final int rare = 24;
+    private static final int veryrare = 14;
+    private static final int epic = 7;
+    private static final int legendary = 1;
 
 
-    private static ThreadLocalRandom random = ThreadLocalRandom.current();
+    private static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
     public static ItemStack randomItem() {
         int totalWeight = 0;
@@ -41,6 +45,24 @@ public class Items {
         return items[idx].getItemStack();
     }
 
+    public static Consumer<ItemStack.Builder> potionHelper(PotionEffect potionEffect, int secondsDuration) {
+        return builder -> builder.meta(PotionMeta.class, (meta) -> {
+            meta.potionType(PotionType.WATER);
+            meta.displayName(Component.text("Potion of " + titleCase(potionEffect.namespace().value().replace('_', ' ')), NamedTextColor.WHITE).decoration(TextDecoration.ITALIC, false));
+            meta.effects(List.of(new CustomPotionEffect((byte) potionEffect.id(), (byte) 0, secondsDuration * 20, false, true, true)));
+        });
+    }
+    private static String titleCase(String myinput) { // fire resistance -> Fire Resistance
+        char[] charAray = myinput.toCharArray();
+        for(int i = 0; i < charAray.length; i++) {
+            charAray[0] = Character.toUpperCase(charAray[0]);
+            if(charAray[i] == ' ') {
+                charAray[i+1] = Character.toUpperCase(charAray[i+1]);
+            }
+        }
+        return String.valueOf(charAray);
+    }
+
 
     public static Item[] items = new Item[]{
             // Consumables
@@ -54,12 +76,7 @@ public class Items {
             // Weapons
             new Item(Material.BOW, uncommon),
             new Item(Material.ARROW, lesscommon, (it) -> it.amount(random.nextInt(2, 6))),
-            new Item(Material.TIPPED_ARROW, rare, (it) -> {
-                it.meta(PotionMeta.class, (meta) -> {
-                    meta.effects(List.of(new CustomPotionEffect((byte) PotionEffect.POISON.id(), (byte) 0, 5 * 20, false, true, true)));
-                    meta.potionType(PotionType.POISON);
-                });
-            }),
+            new Item(Material.TIPPED_ARROW, rare, potionHelper(PotionEffect.POISON, 5)),
 
             // Swords
             new Item(Material.WOODEN_SWORD, uncommon),
@@ -106,14 +123,8 @@ public class Items {
             //new Item(Material.TOTEM_OF_UNDYING, legendary),
             new Item(Material.POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> meta.potionType(PotionType.STRONG_HEALING))),
             new Item(Material.POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> meta.potionType(PotionType.FIRE_RESISTANCE))),
-            new Item(Material.POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> {
-                meta.potionType(PotionType.INVISIBILITY);
-                meta.effects(List.of(new CustomPotionEffect((byte) PotionEffect.INVISIBILITY.id(), (byte) 0, 20 * 20, false, true, true)));
-            })),
-            new Item(Material.POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> {
-                meta.potionType(PotionType.STRENGTH);
-                meta.effects(List.of(new CustomPotionEffect((byte) PotionEffect.STRENGTH.id(), (byte) 0, 20 * 20, false, true, true)));
-            })),
+            new Item(Material.POTION, rare, potionHelper(PotionEffect.INVISIBILITY, 20)),
+            new Item(Material.POTION, rare, potionHelper(PotionEffect.STRENGTH, 20)),
             new Item(Material.POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> meta.potionType(PotionType.REGENERATION))),
             new Item(Material.SPLASH_POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> meta.potionType(PotionType.STRONG_HARMING))),
             //        new Item(Material.LINGERING_POTION, rare) {
@@ -126,18 +137,9 @@ public class Items {
             //                it.potionType(PotionType.STRONG_HARMING)
             //            }
             //        },
-            new Item(Material.SPLASH_POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> {
-                meta.potionType(PotionType.POISON);
-                meta.effects(List.of(new CustomPotionEffect((byte) PotionEffect.POISON.id(), (byte) 0, 17 * 20, false, true, true)));
-            })),
-            new Item(Material.SPLASH_POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> {
-                meta.potionType(PotionType.SLOWNESS);
-                meta.effects(List.of(new CustomPotionEffect((byte) PotionEffect.SLOWNESS.id(), (byte) 0, 40 * 20, false, true, true)));
-            })),
-            new Item(Material.SPLASH_POTION, rare, (it) -> it.meta(PotionMeta.class, (meta) -> {
-                meta.potionType(PotionType.WEAKNESS);
-                meta.effects(List.of(new CustomPotionEffect((byte) PotionEffect.WEAKNESS.id(), (byte) 0, 45 * 20, false, true, true)));
-            })),
+            new Item(Material.SPLASH_POTION, rare, potionHelper(PotionEffect.POISON, 16)),
+            new Item(Material.SPLASH_POTION, rare, potionHelper(PotionEffect.SLOWNESS, 40)),
+            new Item(Material.SPLASH_POTION, rare, potionHelper(PotionEffect.WEAKNESS, 45)),
 
             // Armour
             // Helmets

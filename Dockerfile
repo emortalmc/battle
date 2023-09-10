@@ -8,6 +8,6 @@ RUN apt-get install wget \
     libstdc++6 libstdc++ # Add libraries required for pyroscope
 
 COPY build/libs/*-all.jar /app/battle.jar
-COPY run/maps/*.polar /app/maps/
+COPY run/maps /app/maps
 
 CMD ["java", "--enable-preview", "-jar", "/app/battle.jar"]

@@ -2,14 +2,14 @@ package dev.emortal.minestom.battle.entity;
 
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
+import org.jetbrains.annotations.NotNull;
 
-public class NoPhysicsEntity extends Entity {
+public final class NoPhysicsEntity extends Entity {
 
-    public NoPhysicsEntity(EntityType type) {
+    public NoPhysicsEntity(@NotNull EntityType type) {
         super(type);
 
-        this.setNoGravity(true);
-        this.hasPhysics = false;
+        super.setNoGravity(true);
+        super.hasPhysics = false;
     }
-
 }

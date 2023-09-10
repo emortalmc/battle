@@ -7,69 +7,57 @@ import net.kyori.adventure.text.format.TextDecoration;
 import net.minestom.server.item.ItemHideFlag;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
 
-public class Item {
+public final class Item {
 
-    private Material material;
-    private int weight;
-    private Consumer<ItemStack.Builder> itemCreate = (a) -> {};
-    private ItemStack itemStack;
+    private final @NotNull Material material;
+    private final int weight;
+    private final @NotNull Consumer<ItemStack.Builder> itemCreate;
+    private final @NotNull ItemStack itemStack;
 
-    public Item(Material material, int weight, Consumer<ItemStack.Builder> itemCreate) {
+    public Item(@NotNull Material material, int weight, @NotNull Consumer<ItemStack.Builder> itemCreate) {
         this.material = material;
         this.weight = weight;
         this.itemCreate = itemCreate;
-        this.itemStack = createItemStack();
-    }
-    public Item(Material material, int weight) {
-        this.material = material;
-        this.weight = weight;
-        this.itemStack = createItemStack();
+        this.itemStack = this.createItemStack();
     }
 
-    private ItemStack createItemStack() {
-        ItemStack.Builder builder = ItemStack.builder(material);
-        itemCreate.accept(builder);
+    public Item(@NotNull Material material, int weight) {
+        this(material, weight, builder -> {});
+    }
 
-        Tool tool = Tool.fromMaterial(material);
+    private @NotNull ItemStack createItemStack() {
+        ItemStack.Builder builder = ItemStack.builder(this.material);
+        this.itemCreate.accept(builder);
+
+        Tool tool = Tool.fromMaterial(this.material);
         if (tool != null) {
             int damage = (int) tool.legacyAttackDamage;
             if (damage > 0) {
-                builder.lore(
-                        Component.text()
-                                .append(Component.text("Deals ", NamedTextColor.GRAY))
-                                .append(Component.text("❤".repeat(damage), NamedTextColor.RED))
-                                .append(Component.text(" (" + damage + ")", NamedTextColor.GRAY))
-                                .build()
-                                .decoration(TextDecoration.ITALIC, false)
-                );
+                builder.lore(Component.text()
+                        .decoration(TextDecoration.ITALIC, false)
+                        .append(Component.text("Deals ", NamedTextColor.GRAY))
+                        .append(Component.text("❤".repeat(damage), NamedTextColor.RED))
+                        .append(Component.text(" (" + damage + ")", NamedTextColor.GRAY))
+                        .build());
             } else {
-                builder.lore(
-                        Component.text("Deals no damage", NamedTextColor.GRAY)
-                );
+                builder.lore(Component.text("Deals no damage", NamedTextColor.GRAY));
             }
 
-            builder.meta((a) -> a.hideFlag(ItemHideFlag.HIDE_ATTRIBUTES));
+            builder.meta(b -> b.hideFlag(ItemHideFlag.HIDE_ATTRIBUTES));
         }
 
         return builder.build();
     }
 
-//    public Material getMaterial() {
-//        return material;
-//    }
+    public @NotNull ItemStack getItemStack() {
+        return this.itemStack;
+    }
 
     public int getWeight() {
         return weight;
-    }
-
-    public Consumer<ItemStack.Builder> getItemCreate() {
-        return itemCreate;
-    }
-
-    public ItemStack getItemStack() {
-        return itemStack;
     }
 }

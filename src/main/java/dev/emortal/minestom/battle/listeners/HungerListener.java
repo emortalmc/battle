@@ -1,20 +1,22 @@
 package dev.emortal.minestom.battle.listeners;
 
-import dev.emortal.minestom.battle.BattleGame;
 import io.github.bloepiloepi.pvp.events.PlayerExhaustEvent;
 import net.minestom.server.entity.GameMode;
-import net.minestom.server.event.EventNode;
-import net.minestom.server.event.trait.InstanceEvent;
+import net.minestom.server.entity.Player;
+import net.minestom.server.instance.Instance;
+import org.jetbrains.annotations.NotNull;
 
-public class HungerListener {
+public final class HungerListener {
 
-    public static void registerListener(EventNode<InstanceEvent> eventNode, BattleGame game) {
-        eventNode.addListener(PlayerExhaustEvent.class, e -> {
-            if (e.getPlayer().getGameMode() != GameMode.ADVENTURE) {
-                e.setCancelled(true);
-                e.getPlayer().setFood(20);
-            }
-        });
+    public static void register(@NotNull Instance instance) {
+        instance.eventNode().addListener(PlayerExhaustEvent.class, HungerListener::onExhaust);
     }
 
+    private static void onExhaust(@NotNull PlayerExhaustEvent event) {
+        Player player = event.getPlayer();
+        if (player.getGameMode() == GameMode.ADVENTURE) return;
+
+        event.setCancelled(true);
+        player.setFood(20);
+    }
 }

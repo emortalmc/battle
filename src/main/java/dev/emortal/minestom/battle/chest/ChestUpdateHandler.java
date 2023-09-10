@@ -1,0 +1,241 @@
+package dev.emortal.minestom.battle.chest;
+
+import dev.emortal.minestom.battle.game.BattleGame;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
+import net.minestom.server.coordinate.Point;
+import net.minestom.server.entity.Player;
+import net.minestom.server.event.inventory.InventoryCloseEvent;
+import net.minestom.server.event.player.PlayerBlockInteractEvent;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.block.Block;
+import net.minestom.server.instance.block.BlockHandler;
+import net.minestom.server.network.packet.server.play.BlockActionPacket;
+import net.minestom.server.network.packet.server.play.ParticlePacket;
+import net.minestom.server.particle.Particle;
+import net.minestom.server.particle.ParticleCreator;
+import net.minestom.server.sound.SoundEvent;
+import net.minestom.server.timer.TaskSchedule;
+import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+
+public final class ChestUpdateHandler {
+    private static final TaskSchedule CHEST_REFILL_INTERVAL = TaskSchedule.seconds(80);
+
+    private final @NotNull BattleGame game;
+    private final @NotNull Instance instance;
+
+    private final Set<Point> chests = new HashSet<>();
+    private final Set<Point> unopenedChests = new HashSet<>();
+    private final Map<UUID, Point> chestsByPlayer = new HashMap<>();
+
+    public ChestUpdateHandler(@NotNull BattleGame game) {
+        this.game = game;
+        this.instance = game.getSpawningInstance();
+
+        this.registerBackgroundTasks();
+        game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onBlockInteract);
+        game.getEventNode().addListener(InventoryCloseEvent.class, this::onInventoryClose);
+    }
+
+    private void onBlockInteract(@NotNull PlayerBlockInteractEvent event) {
+        Block block = event.getBlock();
+        if (!block.compare(Block.CHEST)) return;
+
+        Point pos = event.getBlockPosition();
+        ChestBlockHandler chestHandler = this.ensureChestHasCorrectHandler(block, pos);
+
+        event.getPlayer().openInventory(chestHandler.getInventory());
+
+        this.unopenedChests.remove(pos);
+        this.chestsByPlayer.put(event.getPlayer().getUuid(), pos);
+
+        int playersInside = chestHandler.addPlayerInside();
+        this.updatePlayersInsideChest(pos, playersInside);
+
+        if (playersInside == 1) {
+            // This is the first player to open the chest
+            this.playChestOpenSound(pos);
+        }
+    }
+
+    private void onInventoryClose(@NotNull InventoryCloseEvent event) {
+        Player player = event.getPlayer();
+
+        Point openChestPos = this.chestsByPlayer.remove(player.getUuid());
+        if (openChestPos == null) return;
+
+        ChestBlockHandler handler = (ChestBlockHandler) this.instance.getBlock(openChestPos).handler();
+        int playersInside = handler.removePlayerInside();
+
+        this.updatePlayersInsideChest(openChestPos, playersInside);
+        if (playersInside == 0) {
+            this.playChestCloseSound(openChestPos);
+        }
+    }
+
+    private @NotNull ChestBlockHandler ensureChestHasCorrectHandler(@NotNull Block block, @NotNull Point pos) {
+        BlockHandler handler = block.handler();
+
+        if (!(handler instanceof ChestBlockHandler)) {
+            ChestBlockHandler newHandler = new ChestBlockHandler();
+
+            this.instance.setBlock(pos, block.withHandler(newHandler));
+            handler = newHandler;
+
+            this.chests.add(pos);
+        }
+
+        // This cast will always succeed, as we always overwrite the handler field with a ChestBlockHandler if it is not already one
+        return (ChestBlockHandler) handler;
+    }
+
+    private void updatePlayersInsideChest(@NotNull Point chestPos, int newCount) {
+        // The animation of the chest opening and closing is completely controlled by the client
+        // all we have to do is just tell it when the players inside count changes
+        this.instance.sendGroupedPacket(new BlockActionPacket(chestPos, (byte) 1, (byte) newCount, Block.CHEST));
+    }
+
+    private void playChestOpenSound(@NotNull Point pos) {
+        this.game.playSound(Sound.sound(SoundEvent.BLOCK_CHEST_OPEN, Sound.Source.BLOCK, 1f, 1f), pos.x(), pos.y(), pos.z());
+    }
+
+    private void playChestCloseSound(@NotNull Point pos) {
+        this.game.playSound(Sound.sound(SoundEvent.BLOCK_CHEST_CLOSE, Sound.Source.BLOCK, 1f, 1f), pos.x(), pos.y(), pos.z());
+    }
+
+    private void registerBackgroundTasks() {
+        // Chest periodic refill task
+        this.instance.scheduler().buildTask(this::refillChests)
+                .delay(CHEST_REFILL_INTERVAL)
+                .repeat(CHEST_REFILL_INTERVAL)
+                .schedule();
+
+        this.instance.scheduler().buildTask(new DisplayChestRefillParticlesTask()).schedule();
+    }
+
+    private void refillChests() {
+        for (Point chestPos : this.chests) {
+            ChestBlockHandler handler = (ChestBlockHandler) this.instance.getBlock(chestPos).handler();
+            handler.refillInventory();
+        }
+
+        this.unopenedChests.clear();
+        this.unopenedChests.addAll(this.chests);
+
+        this.animateChest();
+    }
+
+    private void animateChest() {
+        this.playRefillOpenSound();
+        this.instance.scheduler().submitTask(new AnimateChestTask(this.game, this.instance));
+    }
+
+    private void playRefillOpenSound() {
+        this.game.playSound(Sound.sound(Key.key("battle.refill.open"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+    }
+
+    private final class DisplayChestRefillParticlesTask implements Runnable {
+
+        private double i = 0.0;
+
+        @Override
+        public void run() {
+            if (this.i > 2 * Math.PI) {
+                this.i = this.i % 2 * Math.PI;
+            }
+
+            for (Point unopenedChest : ChestUpdateHandler.this.unopenedChests) {
+                ParticlePacket packet = this.createParticlePacket(unopenedChest);
+                ChestUpdateHandler.this.game.sendGroupedPacket(packet);
+            }
+        }
+
+        private @NotNull ParticlePacket createParticlePacket(@NotNull Point pos) {
+            return ParticleCreator.createParticlePacket(Particle.DUST, true, pos.x(), pos.y(), pos.z(), 0f, 0f, 0f, 0f, 1, writer -> {
+                writer.writeFloat(1f);
+                writer.writeFloat(1f);
+                writer.writeFloat(0f);
+                writer.writeFloat(0.75f);
+            });
+        }
+    }
+
+    private static final class AnimateChestTask implements Supplier<TaskSchedule> {
+        private static final Component[] FRAMES = new Component[] {Component.text('\uE00E'), Component.text('\uE00F'), Component.text('\uE010')};
+
+        private final @NotNull BattleGame game;
+        private final @NotNull Instance instance;
+
+        private int frame = 0;
+
+        AnimateChestTask(@NotNull BattleGame game, @NotNull Instance instance) {
+            this.game = game;
+            this.instance = instance;
+        }
+
+        @Override
+        public TaskSchedule get() {
+            if (!this.showedAllFrames()) {
+                this.showNextFrame();
+                this.frame++;
+                return TaskSchedule.tick(2);
+            }
+
+            this.instance.scheduler().submitTask(new Supplier<>() {
+                boolean firstTick = true;
+                boolean playedSound = false;
+
+                @Override
+                public TaskSchedule get() {
+                    if (this.firstTick) {
+                        this.firstTick = false;
+                        return TaskSchedule.seconds(1);
+                    }
+
+                    if (!this.playedSound) {
+                        this.playedSound = true;
+                        AnimateChestTask.this.playRefillCloseSound();
+                    }
+
+                    AnimateChestTask.this.frame--;
+                    AnimateChestTask.this.showNextFrame();
+
+                    if (AnimateChestTask.this.frame == 0) {
+                        return TaskSchedule.stop();
+                    }
+
+                    return TaskSchedule.tick(2);
+                }
+            });
+
+            return TaskSchedule.stop();
+        }
+
+        private boolean showedAllFrames() {
+            return this.frame >= FRAMES.length;
+        }
+
+        private void showNextFrame() {
+            Component nextFrame = FRAMES[this.frame];
+            this.game.showTitle(Title.title(
+                    nextFrame,
+                    Component.empty(),
+                    Title.Times.times(Duration.ZERO, Duration.ofMillis(1200), Duration.ofMillis(200))
+            ));
+        }
+
+        private void playRefillCloseSound() {
+            this.game.playSound(Sound.sound(Key.key("battle.refill.close"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
+        }
+    }
+}

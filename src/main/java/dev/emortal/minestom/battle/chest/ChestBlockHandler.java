@@ -11,14 +11,27 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class ChestHandler implements BlockHandler {
+final class ChestBlockHandler implements BlockHandler {
 
-    public final AtomicInteger playersInside = new AtomicInteger(0);
     private final Inventory inventory = new Inventory(InventoryType.CHEST_3_ROW, "");
+    private final AtomicInteger playersInside = new AtomicInteger(0);
 //    private boolean unopenedSinceRefill = true;
 
-    public Inventory getInventory() {
+    ChestBlockHandler() {
+        super();
+        this.refillInventory();
+    }
+
+    @NotNull Inventory getInventory() {
         return this.inventory;
+    }
+
+    int addPlayerInside() {
+        return this.playersInside.incrementAndGet();
+    }
+
+    int removePlayerInside() {
+        return this.playersInside.decrementAndGet();
     }
 
     @Override
@@ -30,26 +43,21 @@ public class ChestHandler implements BlockHandler {
 //        return unopenedSinceRefill;
 //    }
 
-    public ChestHandler() {
-        super();
-        refillInventory();
-    }
-
-    public void refillInventory() {
+    void refillInventory() {
 //        unopenedSinceRefill = true
 
-        inventory.clear();
+        this.inventory.clear();
         for (int i = 0; i < 7; i++) {
-            addRandomly(inventory, Items.randomItem());
+            addRandomly(this.inventory, Items.random());
         }
     }
 
 
-    private static void addRandomly(Inventory inventory, ItemStack itemStack) {
-        ThreadLocalRandom rand = ThreadLocalRandom.current();
+    private static void addRandomly(@NotNull Inventory inventory, @NotNull ItemStack itemStack) {
+        ThreadLocalRandom random = ThreadLocalRandom.current();
 
         while (true) {
-            int randomSlot = rand.nextInt(inventory.getSize());
+            int randomSlot = random.nextInt(inventory.getSize());
             if (inventory.getItemStack(randomSlot) == ItemStack.AIR) {
                 inventory.setItemStack(randomSlot, itemStack);
                 break;

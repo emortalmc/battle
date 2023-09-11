@@ -1,0 +1,8 @@
+{
+  "circleRadius": 8.0,
+  "circleCenter": {
+    "x": 0.5,
+    "y": 66.0,
+    "z": 0.5
+  }
+}

@@ -11,7 +11,6 @@ import net.minestom.server.event.inventory.InventoryCloseEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.instance.block.BlockHandler;
 import net.minestom.server.network.packet.server.play.BlockActionPacket;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
@@ -21,11 +20,7 @@ import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 
 public final class ChestUpdateHandler {
@@ -34,7 +29,7 @@ public final class ChestUpdateHandler {
     private final @NotNull BattleGame game;
     private final @NotNull Instance instance;
 
-    private final Set<Point> chests = new HashSet<>();
+    private final Map<Point, ChestBlockHandler> chests = new HashMap<>();
     private final Set<Point> unopenedChests = new HashSet<>();
     private final Map<UUID, Point> chestsByPlayer = new HashMap<>();
 
@@ -52,7 +47,7 @@ public final class ChestUpdateHandler {
         if (!block.compare(Block.CHEST)) return;
 
         Point pos = event.getBlockPosition();
-        ChestBlockHandler chestHandler = this.ensureChestHasCorrectHandler(block, pos);
+        ChestBlockHandler chestHandler = this.getOrCreateChestHandler(pos);
 
         event.getPlayer().openInventory(chestHandler.getInventory());
 
@@ -74,7 +69,7 @@ public final class ChestUpdateHandler {
         Point openChestPos = this.chestsByPlayer.remove(player.getUuid());
         if (openChestPos == null) return;
 
-        ChestBlockHandler handler = (ChestBlockHandler) this.instance.getBlock(openChestPos).handler();
+        ChestBlockHandler handler = this.chests.get(openChestPos);
         int playersInside = handler.removePlayerInside();
 
         this.updatePlayersInsideChest(openChestPos, playersInside);
@@ -83,20 +78,16 @@ public final class ChestUpdateHandler {
         }
     }
 
-    private @NotNull ChestBlockHandler ensureChestHasCorrectHandler(@NotNull Block block, @NotNull Point pos) {
-        BlockHandler handler = block.handler();
+    private @NotNull ChestBlockHandler getOrCreateChestHandler(@NotNull Point pos) {
+        ChestBlockHandler handler = this.chests.get(pos);
 
-        if (!(handler instanceof ChestBlockHandler)) {
+        if (handler == null) {
             ChestBlockHandler newHandler = new ChestBlockHandler();
-
-            this.instance.setBlock(pos, block.withHandler(newHandler));
+            this.chests.put(pos, newHandler);
             handler = newHandler;
-
-            this.chests.add(pos);
         }
 
-        // This cast will always succeed, as we always overwrite the handler field with a ChestBlockHandler if it is not already one
-        return (ChestBlockHandler) handler;
+        return handler;
     }
 
     private void updatePlayersInsideChest(@NotNull Point chestPos, int newCount) {
@@ -124,13 +115,11 @@ public final class ChestUpdateHandler {
     }
 
     private void refillChests() {
-        for (Point chestPos : this.chests) {
-            ChestBlockHandler handler = (ChestBlockHandler) this.instance.getBlock(chestPos).handler();
-            handler.refillInventory();
-        }
-
         this.unopenedChests.clear();
-        this.unopenedChests.addAll(this.chests);
+        for (Map.Entry<Point, ChestBlockHandler> chestEntry : chests.entrySet()) {
+            chestEntry.getValue().refillInventory();
+            unopenedChests.add(chestEntry.getKey());
+        }
 
         this.animateChest();
     }

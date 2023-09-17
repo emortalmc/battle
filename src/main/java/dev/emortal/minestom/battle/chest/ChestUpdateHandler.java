@@ -6,6 +6,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.coordinate.Point;
+import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.inventory.InventoryCloseEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
@@ -43,6 +44,8 @@ public final class ChestUpdateHandler {
     }
 
     private void onBlockInteract(@NotNull PlayerBlockInteractEvent event) {
+        if (event.getPlayer().getGameMode() == GameMode.SPECTATOR) return;
+
         Block block = event.getBlock();
         if (!block.compare(Block.CHEST)) return;
 

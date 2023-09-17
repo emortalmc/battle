@@ -34,7 +34,7 @@ spec:
 
           containers:
             - name: battle
-              image: ghcr.io/emortalmc/battle:4e54f585d1d0e55e5b4e79eb0f3f40655610a818
+              image: ghcr.io/emortalmc/battle:e4175f4ad4750ccdbf4d005d49f73efbb59047c4
 
               resources:
                 requests:

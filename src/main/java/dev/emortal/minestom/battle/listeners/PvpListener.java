@@ -115,9 +115,10 @@ public final class PvpListener {
         player.setFood(20);
         player.setAutoViewable(false);
         player.showTitle(YOU_DIED_TITLE);
+        player.getInventory().clear();
     }
 
-    private @NotNull Component sendDeathMessage(@NotNull Player target, @Nullable Player killer) {
+    private void sendDeathMessage(@NotNull Player target, @Nullable Player killer) {
         TextComponent.Builder result = Component.text()
                 .append(Component.text("☠", NamedTextColor.RED))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
@@ -130,7 +131,7 @@ public final class PvpListener {
             result.append(Component.text(" died", NamedTextColor.GRAY));
         }
 
-        return result.build();
+        game.sendMessage(result.build());
     }
 
     private void onTick(@NotNull PlayerTickEvent event) {
@@ -179,6 +180,6 @@ public final class PvpListener {
         }
 
         if (hasFireResistance) return;
-        player.damage(CustomDamageType.IN_FIRE, 1.0f);
+        player.damage(damageType, damageAmount);
     }
 }

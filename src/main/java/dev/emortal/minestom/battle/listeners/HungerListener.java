@@ -19,4 +19,7 @@ public final class HungerListener {
         event.setCancelled(true);
         player.setFood(20);
     }
+
+    private HungerListener() {
+    }
 }

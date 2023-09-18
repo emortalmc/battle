@@ -119,9 +119,10 @@ public final class ChestUpdateHandler {
 
     private void refillChests() {
         this.unopenedChests.clear();
-        for (Map.Entry<Point, ChestBlockHandler> chestEntry : chests.entrySet()) {
+
+        for (Map.Entry<Point, ChestBlockHandler> chestEntry : this.chests.entrySet()) {
             chestEntry.getValue().refillInventory();
-            unopenedChests.add(chestEntry.getKey());
+            this.unopenedChests.add(chestEntry.getKey());
         }
 
         this.animateChest();
@@ -153,7 +154,7 @@ public final class ChestUpdateHandler {
         }
 
         private @NotNull ParticlePacket createParticlePacket(@NotNull Point pos) {
-            return ParticleCreator.createParticlePacket(Particle.DUST, true, pos.x(), pos.y(), pos.z(), 0f, 0f, 0f, 0f, 1, writer -> {
+            return ParticleCreator.createParticlePacket(Particle.DUST, true, pos.x(), pos.y(), pos.z(), 0F, 0F, 0F, 0F, 1, writer -> {
                 writer.writeFloat(1f);
                 writer.writeFloat(1f);
                 writer.writeFloat(0f);
@@ -176,7 +177,7 @@ public final class ChestUpdateHandler {
         }
 
         @Override
-        public TaskSchedule get() {
+        public @NotNull TaskSchedule get() {
             if (!this.showedAllFrames()) {
                 this.showNextFrame();
                 this.frame++;

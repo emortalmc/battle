@@ -100,8 +100,8 @@ public class BattleGame extends Game {
         }
 
         if (alivePlayers.size() == 1 && !MinestomGameServer.TEST_MODE) {
-            if (started.get()) {
-                victory(alivePlayers.iterator().next());
+            if (this.started.get()) {
+                this.victory(alivePlayers.iterator().next());
             } else {
                 this.finish();
             }

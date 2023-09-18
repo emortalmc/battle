@@ -3,9 +3,7 @@ package dev.emortal.minestom.battle.chest;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.Enchantment;
-import net.minestom.server.item.ItemHideFlag;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import net.minestom.server.item.metadata.PotionMeta;
@@ -15,7 +13,6 @@ import net.minestom.server.potion.PotionType;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
@@ -31,7 +28,7 @@ public final class Items {
 
     private static final ThreadLocalRandom RANDOM = ThreadLocalRandom.current();
 
-    private static final @NotNull List<Item> ALL_ITEMS = List.of(
+    private static final @NotNull List<Item> ALL = List.of(
             // Consumables
             new Item(Material.APPLE, COMMON),
             new Item(Material.APPLE, COMMON),
@@ -129,22 +126,25 @@ public final class Items {
             new Item(Material.DIAMOND_BOOTS, LEGENDARY)
     );
 
+    private Items() {
+    }
+
     public static @NotNull ItemStack random() {
         int totalWeight = 0;
-        for (Item item : ALL_ITEMS) {
+        for (Item item : ALL) {
             totalWeight += item.getWeight();
         }
 
         int currentIndex = 0;
         int randomIndex = ThreadLocalRandom.current().nextInt(totalWeight + 1);
 
-        while (currentIndex < ALL_ITEMS.size() - 1) {
-            randomIndex -= ALL_ITEMS.get(currentIndex).getWeight();
+        while (currentIndex < ALL.size() - 1) {
+            randomIndex -= ALL.get(currentIndex).getWeight();
             if (randomIndex <= 0.0) break;
             ++currentIndex;
         }
 
-        return ALL_ITEMS.get(currentIndex).getItemStack();
+        return ALL.get(currentIndex).getItemStack();
     }
 
     private static @NotNull Consumer<ItemStack.Builder> potionHelper(@NotNull PotionEffect potionEffect, int secondsDuration) {

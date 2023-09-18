@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    java
     id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
@@ -8,7 +8,6 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    mavenLocal()
 
     maven("https://repo.emortal.dev/snapshots")
     maven("https://repo.emortal.dev/releases")
@@ -18,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:bf1bede")
+    implementation("dev.emortal.minestom:game-sdk:abecd78")
 
     implementation("dev.hollowcube:polar:1.3.1")
     implementation("com.github.EmortalMC:MinestomPvP:6aefcba403")

@@ -15,7 +15,6 @@ final class ChestBlockHandler implements BlockHandler {
 
     private final Inventory inventory = new Inventory(InventoryType.CHEST_3_ROW, "");
     private final AtomicInteger playersInside = new AtomicInteger(0);
-//    private boolean unopenedSinceRefill = true;
 
     ChestBlockHandler() {
         super();
@@ -39,19 +38,12 @@ final class ChestBlockHandler implements BlockHandler {
         return Block.CHEST.namespace();
     }
 
-//    public boolean isUnopenedSinceRefill() {
-//        return unopenedSinceRefill;
-//    }
-
     void refillInventory() {
-//        unopenedSinceRefill = true
-
         this.inventory.clear();
         for (int i = 0; i < 7; i++) {
             addRandomly(this.inventory, Items.random());
         }
     }
-
 
     private static void addRandomly(@NotNull Inventory inventory, @NotNull ItemStack itemStack) {
         ThreadLocalRandom random = ThreadLocalRandom.current();

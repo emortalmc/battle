@@ -19,4 +19,7 @@ public final class PlayerTeams {
             .nameTagVisibility(TeamsPacket.NameTagVisibility.NEVER)
             .updateTeamPacket()
             .build();
+
+    private PlayerTeams() {
+    }
 }

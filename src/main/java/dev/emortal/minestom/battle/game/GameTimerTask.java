@@ -33,6 +33,7 @@ final class GameTimerTask implements Supplier<TaskSchedule> {
         this.playTime = this.calculatePlayTime();
         this.glowing = (int) Math.floor(this.playTime * 0.3);
         this.invulnerability = this.playTime - INVULNERABILITY_TIME;
+
         this.secondsLeft = this.playTime;
     }
 
@@ -47,29 +48,25 @@ final class GameTimerTask implements Supplier<TaskSchedule> {
             return TaskSchedule.stop();
         }
 
-        if (this.shouldStartShowdownCountdown()) {
+        if (this.secondsLeft <= 10) {
             this.doShowdownCountdown();
         }
 
-        if (this.shouldStartGlowing()) {
+        if (this.secondsLeft == this.glowing) {
             this.startGlowing();
         }
 
-        if (this.shouldStartInitialInvulnerability()) {
+        if (this.secondsLeft >= this.invulnerability && this.secondsLeft <= this.invulnerability + INVULNERABILITY_TIME) {
             this.startInitialInvulnerability();
         }
 
-        if (this.shouldStopInvulnerability()) {
+        if (this.secondsLeft == this.invulnerability) {
             this.stopInvulnerability();
         }
 
         this.bossBar.updateProgress((float) this.secondsLeft / (float) this.playTime);
         this.secondsLeft--;
         return TaskSchedule.seconds(1);
-    }
-
-    private boolean shouldStopInvulnerability() {
-        return this.secondsLeft == this.invulnerability;
     }
 
     private void stopInvulnerability() {
@@ -81,10 +78,6 @@ final class GameTimerTask implements Supplier<TaskSchedule> {
         }
     }
 
-    private boolean shouldStartInitialInvulnerability() {
-        return this.secondsLeft >= this.invulnerability && this.secondsLeft <= this.invulnerability + INVULNERABILITY_TIME;
-    }
-
     private void startInitialInvulnerability() {
         int invulnerableSeconds = this.secondsLeft - this.invulnerability;
         this.game.sendActionBar(Component.text("You are invulnerable for " + invulnerableSeconds + " seconds"));
@@ -92,10 +85,6 @@ final class GameTimerTask implements Supplier<TaskSchedule> {
         if (invulnerableSeconds <= 5) {
             this.game.playSound(Sound.sound(Key.key("battle.countdown.begin"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
         }
-    }
-
-    private boolean shouldStartGlowing() {
-        return this.secondsLeft == this.glowing;
     }
 
     private void startGlowing() {
@@ -109,10 +98,6 @@ final class GameTimerTask implements Supplier<TaskSchedule> {
         for (Player alive : this.game.getAlivePlayers()) {
             alive.setGlowing(true);
         }
-    }
-
-    private boolean shouldStartShowdownCountdown() {
-        return this.secondsLeft <= 10;
     }
 
     private void doShowdownCountdown() {

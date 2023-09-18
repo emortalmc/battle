@@ -100,7 +100,7 @@ public final class PvpListener {
 
             killer.showTitle(Title.title(
                     Component.empty(),
-                    Component.text().append(Component.text("☠ " + target.getUsername(), NamedTextColor.RED)).build(),
+                    Component.text("☠ " + target.getUsername(), NamedTextColor.RED),
                     Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1))
             ));
         }
@@ -131,7 +131,7 @@ public final class PvpListener {
             result.append(Component.text(" died", NamedTextColor.GRAY));
         }
 
-        game.sendMessage(result.build());
+        this.game.sendMessage(result.build());
     }
 
     private void onTick(@NotNull PlayerTickEvent event) {

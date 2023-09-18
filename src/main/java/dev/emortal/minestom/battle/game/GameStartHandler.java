@@ -107,12 +107,8 @@ final class GameStartHandler {
                 return TaskSchedule.stop();
             }
 
-            this.game.showTitle(Title.title(
-                    Component.empty(),
-                    Component.text(this.secondsLeft),
-                    DEFAULT_TIMES
-            ));
-            if (secondsLeft <= 5) {
+            this.game.showTitle(Title.title(Component.empty(), Component.text(this.secondsLeft), DEFAULT_TIMES));
+            if (this.secondsLeft <= 5) {
                 this.game.playSound(Sound.sound(Key.key("battle.countdown.begin2"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
             }
 
@@ -132,11 +128,7 @@ final class GameStartHandler {
         }
 
         private void notifyGameStarted() {
-            this.game.showTitle(Title.title(
-                    Component.empty(),
-                    Component.text("Round start!"),
-                    DEFAULT_TIMES
-            ));
+            this.game.showTitle(Title.title(Component.empty(), Component.text("Round start!"), DEFAULT_TIMES));
             this.game.playSound(Sound.sound(Key.key("battle.countdown.beginover"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
         }
 

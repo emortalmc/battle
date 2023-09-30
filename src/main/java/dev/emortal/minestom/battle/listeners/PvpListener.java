@@ -33,7 +33,6 @@ import java.util.Iterator;
 
 public final class PvpListener {
     public static final @NotNull Tag<Integer> KILLS_TAG = Tag.Integer("kills");
-//    public static final @NotNull Tag<Boolean> INVULNERABLE_TAG = Tag.Boolean("invulnerable");
 
     private static final Title YOU_DIED_TITLE = Title.title(
             Component.text("YOU DIED", NamedTextColor.RED, TextDecoration.BOLD),
@@ -91,6 +90,8 @@ public final class PvpListener {
         this.game.playSound(Sound.sound(Key.key("battle.death"), Sound.Source.MASTER, 1f, 1f), Sound.Emitter.self());
         this.resetPlayerAfterDeath(target);
 
+        this.sendDeathMessage(target, killer);
+
         if (killer != null) {
             Integer lastKills = target.getTag(KILLS_TAG);
             if (lastKills == null) {
@@ -103,9 +104,15 @@ public final class PvpListener {
                     Component.text("☠ " + target.getUsername(), NamedTextColor.RED),
                     Title.Times.times(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(1))
             ));
-        }
 
-        this.sendDeathMessage(target, killer);
+            target.sendMessage(
+                    Component.text()
+                            .append(Component.text(killer.getUsername(), NamedTextColor.GOLD))
+                            .append(Component.text(" was on ", NamedTextColor.GRAY))
+                            .append(Component.text((int) killer.getHealth(), NamedTextColor.RED))
+                            .append(Component.text("/20", NamedTextColor.RED))
+            );
+        }
     }
 
     private void resetPlayerAfterDeath(@NotNull Player player) {

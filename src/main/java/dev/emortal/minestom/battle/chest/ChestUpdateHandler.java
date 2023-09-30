@@ -109,7 +109,10 @@ public final class ChestUpdateHandler {
 
     private void registerBackgroundTasks() {
         // Chest periodic refill task
-        this.instance.scheduler().buildTask(this::refillChests)
+        this.instance.scheduler().buildTask(() -> {
+            if (game.getEnded().get()) return; // Stop refilling chests once game has been won
+            this.refillChests();
+        })
                 .delay(CHEST_REFILL_INTERVAL)
                 .repeat(CHEST_REFILL_INTERVAL)
                 .schedule();
@@ -125,10 +128,10 @@ public final class ChestUpdateHandler {
             this.unopenedChests.add(chestEntry.getKey());
         }
 
-        this.animateChest();
+        this.animateRefillChestTitle();
     }
 
-    private void animateChest() {
+    private void animateRefillChestTitle() {
         this.playRefillOpenSound();
         this.instance.scheduler().submitTask(new AnimateChestTask(this.game, this.instance));
     }

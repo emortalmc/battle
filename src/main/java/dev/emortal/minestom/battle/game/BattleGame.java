@@ -36,6 +36,7 @@ public class BattleGame extends Game {
 
     private final BattleBossBar bossBar = new BattleBossBar();
     private final AtomicBoolean started = new AtomicBoolean();
+    private final AtomicBoolean ended = new AtomicBoolean();
 
     private @Nullable Task gameTimerTask;
 
@@ -65,11 +66,6 @@ public class BattleGame extends Game {
         PotionListener.durationLeftMap.remove(player.getUuid()); // probably works fine but im paranoid
 
         this.checkPlayerCounts();
-    }
-
-    @Override
-    public @NotNull Instance getSpawningInstance() {
-        return this.map.instance();
     }
 
     public void start() {
@@ -113,11 +109,9 @@ public class BattleGame extends Game {
         this.bossBar.updateRemaining(alivePlayers.size());
     }
 
-    public @NotNull Set<Player> getAlivePlayers() {
-        return Collections.unmodifiableSet(Sets.filter(this.getPlayers(), player -> player.getGameMode() == GameMode.ADVENTURE));
-    }
-
     public void victory(@Nullable Player winner) {
+        this.ended.set(true);
+
         if (this.gameTimerTask != null) {
             this.gameTimerTask.cancel();
         }
@@ -179,5 +173,18 @@ public class BattleGame extends Game {
     public void cleanUp() {
         this.map.instance().scheduleNextTick(MinecraftServer.getInstanceManager()::unregisterInstance);
         this.bossBar.delete();
+    }
+
+    @Override
+    public @NotNull Instance getSpawningInstance() {
+        return this.map.instance();
+    }
+
+    public @NotNull Set<Player> getAlivePlayers() {
+        return Collections.unmodifiableSet(Sets.filter(this.getPlayers(), player -> player.getGameMode() == GameMode.ADVENTURE));
+    }
+
+    public AtomicBoolean getEnded() {
+        return ended;
     }
 }

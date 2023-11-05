@@ -68,6 +68,7 @@ public class BattleGame extends Game {
         this.checkPlayerCounts();
     }
 
+    @Override
     public void start() {
         this.started.set(true);
 

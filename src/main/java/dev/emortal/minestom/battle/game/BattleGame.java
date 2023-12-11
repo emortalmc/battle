@@ -7,11 +7,13 @@ import dev.emortal.minestom.battle.map.MapData;
 import dev.emortal.minestom.gamesdk.MinestomGameServer;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
+import dev.emortal.minestom.gamesdk.util.GameWinLoseMessages;
 import io.github.bloepiloepi.pvp.config.DamageConfig;
 import io.github.bloepiloepi.pvp.config.PvPConfig;
 import io.github.bloepiloepi.pvp.potion.PotionListener;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
@@ -89,14 +91,14 @@ public class BattleGame extends Game {
     }
 
     public void checkPlayerCounts() {
-        Set<Player> alivePlayers = getAlivePlayers();
+        Set<Player> alivePlayers = this.getAlivePlayers();
 
         if (alivePlayers.isEmpty()) {
             this.finish();
             return;
         }
 
-        if (alivePlayers.size() == 1 && !MinestomGameServer.TEST_MODE) {
+        if (alivePlayers.size() == 1) {
             if (this.started.get()) {
                 this.victory(alivePlayers.iterator().next());
             } else {
@@ -119,12 +121,12 @@ public class BattleGame extends Game {
 
         Title victoryTitle = Title.title(
                 MINI_MESSAGE.deserialize("<gradient:#ffc570:gold><bold>VICTORY!"),
-                Component.empty(),
+                Component.text(GameWinLoseMessages.randomVictory(), NamedTextColor.GRAY),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(3))
         );
         Title defeatTitle = Title.title(
                 MINI_MESSAGE.deserialize("<gradient:#ff474e:#ff0d0d><bold>DEFEAT!"),
-                Component.empty(),
+                Component.text(GameWinLoseMessages.randomDefeat(), NamedTextColor.GRAY),
                 Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(3))
         );
 
@@ -185,7 +187,7 @@ public class BattleGame extends Game {
         return Collections.unmodifiableSet(Sets.filter(this.getPlayers(), player -> player.getGameMode() == GameMode.ADVENTURE));
     }
 
-    public AtomicBoolean getEnded() {
-        return ended;
+    public boolean hasEnded() {
+        return this.ended.get();
     }
 }

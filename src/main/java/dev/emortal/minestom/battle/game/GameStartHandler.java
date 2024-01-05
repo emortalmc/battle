@@ -142,7 +142,7 @@ final class GameStartHandler {
         private void registerEvents() {
             new PvpListener(this.game);
             new ChestUpdateHandler(this.game);
-            HungerListener.register(this.game.getSpawningInstance());
+            HungerListener.register(this.game.getInstance());
         }
     }
 }

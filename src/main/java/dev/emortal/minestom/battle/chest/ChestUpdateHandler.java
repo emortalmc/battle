@@ -36,7 +36,7 @@ public final class ChestUpdateHandler {
 
     public ChestUpdateHandler(@NotNull BattleGame game) {
         this.game = game;
-        this.instance = game.getSpawningInstance();
+        this.instance = game.getInstance();
 
         this.registerBackgroundTasks();
         game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onBlockInteract);

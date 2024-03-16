@@ -2,8 +2,6 @@ package dev.emortal.minestom.battle.listeners;
 
 import dev.emortal.minestom.battle.game.BattleGame;
 import dev.emortal.minestom.battle.game.PlayerTeams;
-import io.github.bloepiloepi.pvp.damage.CustomDamageType;
-import io.github.bloepiloepi.pvp.damage.CustomEntityDamage;
 import io.github.bloepiloepi.pvp.entity.EntityUtils;
 import io.github.bloepiloepi.pvp.events.EntityPreDeathEvent;
 import io.github.bloepiloepi.pvp.events.FinalDamageEvent;
@@ -18,6 +16,7 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.damage.Damage;
 import net.minestom.server.entity.damage.DamageType;
 import net.minestom.server.event.player.PlayerTickEvent;
 import net.minestom.server.instance.block.Block;
@@ -59,8 +58,7 @@ public final class PvpListener {
             return;
         }
 
-        CustomDamageType type = event.getDamageType();
-        Entity source = type.getEntity();
+        Entity source = event.getDamageType().getEntity();
 
         float animation = source != null ? source.getPosition().yaw() : -1F;
         this.sendHitAnimation(player, animation);
@@ -75,9 +73,9 @@ public final class PvpListener {
         event.setCancelDeath(true);
 
         // Get last player that hit
-        DamageType lastDamage = player.getLastDamageSource();
+        Damage lastDamage = player.getLastDamageSource();
         // CustomEntityDamage should always be used over EntityDamage due to MinestomPvP
-        if (lastDamage instanceof CustomEntityDamage damage && damage.getEntity() instanceof Player killer) {
+        if (lastDamage != null && lastDamage.getSource() != null && lastDamage.getSource() instanceof Player killer) {
             this.handlePlayerDeath(player, killer);
         } else {
             this.handlePlayerDeath(player, null);
@@ -168,13 +166,13 @@ public final class PvpListener {
         if (block.compare(Block.WATER)) {
             player.setOnFire(false);
         } else if (block.compare(Block.FIRE)) {
-            this.doBurningDamage(player, 6, CustomDamageType.IN_FIRE, 1F);
+            this.doBurningDamage(player, 6, DamageType.IN_FIRE, 1F);
         } else if (block.compare(Block.LAVA)) {
-            this.doBurningDamage(player, 12, CustomDamageType.LAVA, 4F);
+            this.doBurningDamage(player, 12, DamageType.LAVA, 4F);
         }
     }
 
-    private void doBurningDamage(@NotNull Player player, int durationSeconds, @NotNull CustomDamageType damageType, float damageAmount) {
+    private void doBurningDamage(@NotNull Player player, int durationSeconds, @NotNull DamageType damageType, float damageAmount) {
         EntityUtils.setFireForDuration(player, Duration.ofSeconds(durationSeconds));
         if (player.getAliveTicks() % 10L != 0L) return;
 

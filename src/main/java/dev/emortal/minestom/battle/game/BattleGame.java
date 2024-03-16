@@ -4,7 +4,6 @@ import com.google.common.collect.Sets;
 import dev.emortal.minestom.battle.listeners.PvpListener;
 import dev.emortal.minestom.battle.map.LoadedMap;
 import dev.emortal.minestom.battle.map.MapData;
-import dev.emortal.minestom.gamesdk.MinestomGameServer;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
 import dev.emortal.minestom.gamesdk.util.GameWinLoseMessages;
@@ -54,7 +53,7 @@ public class BattleGame extends Game {
         player.setAutoViewable(true);
         player.setTeam(PlayerTeams.ALIVE);
         player.setGlowing(false);
-        player.setInvulnerable(true);
+        player.setGameMode(GameMode.ADVENTURE);
 //        player.setGameMode(GameMode.SPECTATOR);
 
         MapData data = this.map.data();

@@ -17,10 +17,12 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:a3bc80a")
+    implementation("dev.emortal.minestom:game-sdk:8ef77c3")
 
-    implementation("dev.hollowcube:polar:1.3.1")
-    implementation("com.github.EmortalMC:MinestomPvP:6aefcba403")
+    implementation("dev.hollowcube:polar:1.7.2")
+    implementation("com.github.emortaldev:MinestomPvP:62e90b78bd") {
+        exclude(group = "net.minestom", module = "minestom-snapshots")
+    }
 
     implementation("net.kyori:adventure-text-minimessage:4.14.0")
 }

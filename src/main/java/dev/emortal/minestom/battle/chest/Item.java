@@ -1,10 +1,5 @@
 package dev.emortal.minestom.battle.chest;
 
-import io.github.bloepiloepi.pvp.enums.Tool;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.minestom.server.item.ItemHideFlag;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import org.jetbrains.annotations.NotNull;
@@ -33,22 +28,23 @@ public final class Item {
         ItemStack.Builder builder = ItemStack.builder(this.material);
         this.itemCreate.accept(builder);
 
-        Tool tool = Tool.fromMaterial(this.material);
-        if (tool != null) {
-            int damage = (int) tool.legacyAttackDamage;
-            if (damage > 0) {
-                builder.lore(Component.text()
-                        .decoration(TextDecoration.ITALIC, false)
-                        .append(Component.text("Deals ", NamedTextColor.GRAY))
-                        .append(Component.text("❤".repeat(damage), NamedTextColor.RED))
-                        .append(Component.text(" (" + damage + ")", NamedTextColor.GRAY))
-                        .build());
-            } else {
-                builder.lore(Component.text("Deals no damage", NamedTextColor.GRAY));
-            }
-
-            builder.meta(b -> b.hideFlag(ItemHideFlag.HIDE_ATTRIBUTES));
-        }
+        // TODO: maybe fix someday, MinestomPVP is a pain!!
+//        Tool tool = Tool.fromMaterial(this.material);
+//        if (tool != null) {
+//            int damage = (int) tool.legacyAttackDamage;
+//            if (damage > 0) {
+//                builder.lore(Component.text()
+//                        .decoration(TextDecoration.ITALIC, false)
+//                        .append(Component.text("Deals ", NamedTextColor.GRAY))
+//                        .append(Component.text("❤".repeat(damage), NamedTextColor.RED))
+//                        .append(Component.text(" (" + damage + ")", NamedTextColor.GRAY))
+//                        .build());
+//            } else {
+//                builder.lore(Component.text("Deals no damage", NamedTextColor.GRAY));
+//            }
+//
+//            builder.meta(b -> b.hideFlag(ItemHideFlag.HIDE_ATTRIBUTES));
+//        }
 
         return builder.build();
     }

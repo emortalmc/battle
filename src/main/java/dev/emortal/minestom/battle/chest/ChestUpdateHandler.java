@@ -4,6 +4,7 @@ import dev.emortal.minestom.battle.game.BattleGame;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.GameMode;
@@ -15,7 +16,7 @@ import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.packet.server.play.BlockActionPacket;
 import net.minestom.server.network.packet.server.play.ParticlePacket;
 import net.minestom.server.particle.Particle;
-import net.minestom.server.particle.ParticleCreator;
+import net.minestom.server.particle.data.DustParticleData;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
@@ -158,12 +159,7 @@ public final class ChestUpdateHandler {
         }
 
         private @NotNull ParticlePacket createParticlePacket(@NotNull Point pos) {
-            return ParticleCreator.createParticlePacket(Particle.DUST, true, pos.x(), pos.y(), pos.z(), 0F, 0F, 0F, 0F, 1, writer -> {
-                writer.writeFloat(1f);
-                writer.writeFloat(1f);
-                writer.writeFloat(0f);
-                writer.writeFloat(0.75f);
-            });
+            return new ParticlePacket(Particle.DUST.withData(new DustParticleData(NamedTextColor.YELLOW, 0.75f)), true, pos.x(), pos.y(), pos.z(), 0F, 0F, 0F, 0, 1);
         }
     }
 

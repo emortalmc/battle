@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:884345c")
+    implementation("dev.emortal.minestom:game-sdk:8385395")
 
     implementation("dev.hollowcube:polar:1.7.2")
     implementation("com.github.emortaldev:MinestomPvP:62e90b78bd") {
